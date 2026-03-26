@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - SignFlow{% endblock %}
+
+{% block content %}
+
+<section class="page-hero">
+    <h1>{{ title }}</h1>
+    <p>{{ description }}</p>
+</section>
+
+<section class="content-section">
+    <div class="placeholder-card">
+        <p>{{ detail }}</p>
+        <a href="{{ cta_href }}" class="btn btn-primary">{{ cta_label }}</a>
+    </div>
+</section>
+
+{% endblock %}

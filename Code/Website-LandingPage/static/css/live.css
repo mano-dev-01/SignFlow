@@ -1,0 +1,507 @@
+/* ============================================
+   SignFlow Live Components - Split Layout
+   ============================================ */
+
+/* Mobile-first base styles */
+.live-page {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 80px); /* 80px is navbar height */
+    overflow: hidden;
+    background-color: var(--bg-primary); /* Blend with theme */
+    display: flex;
+    flex-direction: column;
+}
+
+/* ============================================
+   Setup Panel
+   ============================================ */
+
+.live-setup {
+    position: absolute;
+    inset: 0;
+    background-color: var(--bg-primary);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-md);
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+.live-setup.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.setup-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-2xl);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+:root[data-theme="dark"] .setup-card {
+    box-shadow: 0 0 30px rgba(34, 211, 238, 0.1);
+}
+
+.setup-icon {
+    width: 48px;
+    height: 48px;
+    color: var(--accent);
+    display: inline-block;
+    margin-bottom: var(--spacing-md);
+}
+
+.setup-card h2 {
+    font-size: var(--font-size-2xl);
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-primary);
+}
+
+.setup-subtitle {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xl);
+    font-size: var(--font-size-sm);
+}
+
+.setup-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.btn-full {
+    width: 100%;
+    padding: 14px;
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    background-color: var(--text-primary);
+    color: var(--bg-primary);
+    border: none;
+    cursor: pointer;
+    transition: transform var(--transition-fast), background-color var(--transition-fast);
+}
+
+.btn-full:active {
+    transform: scale(0.98);
+}
+
+:root[data-theme="dark"] .btn-full {
+    background-color: var(--accent);
+    color: #000;
+}
+
+/* ============================================
+   Live Layout Container
+   ============================================ */
+
+.live-viewport {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.live-viewport.is-active {
+    display: flex;
+}
+
+.live-layout {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 720px;
+    height: 100%;
+    max-height: 90vh; /* Prevents overflow */
+    gap: var(--spacing-md);
+}
+
+/* ============================================
+   Top: Camera Section
+   ============================================ */
+
+
+.camera-section {
+    position: relative;
+    width: 100%;
+    background-color: #000;
+    border-radius: var(--radius-xl);
+    border: 2px solid var(--border-color);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+    max-width: 100vw;
+}
+
+.camera-section.portrait {
+    aspect-ratio: 9 / 16;
+    min-height: 320px;
+    max-height: 80vh;
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+}
+/* Collapsible Debug Panel Styles */
+.debug-panel-collapsible {
+    width: 100%;
+    background: #181c24;
+    color: #fff;
+    border-radius: 8px;
+    border: 1px solid #222;
+    box-shadow: 0 2px 8px rgba(34,211,238,0.07);
+    font-size: 0.98em;
+    padding: 0;
+    margin-bottom: 0.5em;
+}
+.debug-panel-collapsible[open] {
+    box-shadow: 0 4px 16px rgba(34,211,238,0.13);
+}
+.debug-panel-collapsible summary {
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: #23272f;
+    color: #fff;
+    outline: none;
+    user-select: none;
+    transition: background 0.2s;
+}
+.debug-panel-collapsible summary:active {
+    background: #222;
+}
+.debug-panel-inner {
+    padding: 12px 16px 10px 16px;
+    border-top: 1px solid #222;
+    color: #e0e0e0;
+    font-size: 0.97em;
+    word-break: break-all;
+}
+
+:root[data-theme="dark"] .camera-section {
+    border-color: rgba(34, 211, 238, 0.3);
+    box-shadow: 0 0 40px rgba(34, 211, 238, 0.15);
+}
+
+.camera-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.camera-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Don't stretch */
+}
+
+/* Flip the video visually if using front camera */
+.camera-video.is-flipped {
+    transform: scaleX(-1);
+}
+
+.camera-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* ============================================
+   Bottom: Controls & Captions
+   ============================================ */
+
+.controls-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme="dark"] .controls-section {
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Caption Output Box */
+.caption-panel {
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    border: 1px dashed var(--border-color);
+    padding: var(--spacing-md);
+    text-align: center;
+    position: relative;
+}
+
+.caption-pill {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.caption-pill.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.caption-pill-text {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+}
+
+:root[data-theme="dark"] .caption-pill-text {
+    background-image: var(--text-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.caption-pill-confidence {
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary);
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.action-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+}
+
+.btn-icon {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2.5px;
+}
+
+.fill-icon {
+    fill: currentColor;
+}
+
+.live-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 24px;
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all var(--transition-base);
+    flex: 1; /* equal width buttons */
+    max-width: 240px;
+}
+
+.live-btn:active {
+    transform: scale(0.98);
+}
+
+.btn-secondary {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.btn-secondary:hover {
+    background-color: var(--bg-primary);
+    border-color: var(--text-secondary);
+}
+
+.btn-danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.btn-danger:hover {
+    background-color: #ef4444;
+    color: white;
+}
+
+/* ============================================
+   Badges (Status & FPS)
+   ============================================ */
+
+.live-status, .fps-badge {
+    position: absolute;
+    top: 16px;
+    padding: 8px 16px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full, 24px);
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+:root[data-theme="dark"] .live-status, 
+:root[data-theme="dark"] .fps-badge {
+    background-color: rgba(13, 18, 36, 0.8); /* Dark glass */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.live-status {
+    left: 16px;
+}
+
+.fps-badge {
+    right: 16px;
+    font-family: monospace;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #f59e0b; /* yellow for connecting */
+}
+
+.status-dot.is-connected {
+    background-color: #10b981; /* green for connected */
+}
+
+/* ============================================
+   Loading State
+   ============================================ */
+
+.live-loading {
+    position: absolute;
+    inset: 0;
+    background-color: var(--bg-primary);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.live-loading.is-active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+#loading-text {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+}
+
+/* ============================================
+   Toast Notification
+   ============================================ */
+
+.live-toast {
+    position: fixed;
+    bottom: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--text-primary);
+    color: var(--bg-primary);
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 2000;
+    transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.live-toast.is-visible {
+    bottom: 80px;
+}
+
+.live-toast.toast-error {
+    background-color: #ef4444; /* red */
+    color: #fff;
+}
+
+.live-toast.toast-success {
+    background-color: #10b981; /* green */
+    color: #fff;
+}
+
+/* ============================================
+   Mobile Adjustments
+   ============================================ */
+
+@media (max-width: 600px) {
+    .live-viewport {
+        padding: var(--spacing-xs);
+    }
+    .live-layout {
+        max-width: 100vw;
+        gap: var(--spacing-sm);
+    }
+    .camera-section {
+        min-height: 160px;
+        max-height: 50vw;
+        aspect-ratio: 16 / 9;
+    }
+    .controls-section {
+        padding: var(--spacing-md);
+        gap: var(--spacing-sm);
+    }
+    .caption-panel {
+        min-height: 60px;
+        padding: var(--spacing-sm);
+    }
+    .live-btn {
+        padding: 10px 8px;
+        font-size: var(--font-size-sm);
+    }
+}

@@ -1,0 +1,280 @@
+/* ============================================
+   SignFlow - Theme Specific Styles
+   ============================================ */
+
+/* Light Theme Enhancements */
+:root[data-theme="light"],
+:root:not([data-theme]) {
+    color-scheme: light;
+}
+
+:root[data-theme="light"] body,
+:root:not([data-theme]) body {
+    background-color: #ffffff;
+}
+
+:root[data-theme="light"] .navbar,
+:root:not([data-theme]) .navbar {
+    background-color: rgba(255, 255, 255, 0.99);
+    border-bottom-color: #e0e0e0;
+}
+
+:root[data-theme="light"] section:nth-child(even),
+:root:not([data-theme]) section:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+/* Dark Theme Enhancements */
+:root[data-theme="dark"] {
+    color-scheme: dark;
+}
+
+:root[data-theme="dark"] body {
+    background-color: #0a0a0a;
+}
+
+:root[data-theme="dark"] .navbar {
+    background-color: rgba(10, 10, 10, 0.98);
+    border-bottom-color: #2a2a2a;
+}
+
+/* Hero Section Theme Specific */
+:root[data-theme="dark"] .hero {
+    background: linear-gradient(135deg, #0a0a0a 0%, #121212 100%);
+}
+
+:root[data-theme="light"] .hero {
+    background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+}
+
+/* Accent Colors in Dark Mode */
+:root[data-theme="dark"] .stat-number,
+:root[data-theme="dark"] .donation-amount {
+    color: #00a8cc;
+    text-shadow: 0 0 15px rgba(0, 168, 204, 0.3);
+}
+
+:root[data-theme="dark"] .accent {
+    color: #00a8cc;
+}
+
+/* Cards and Backgrounds */
+:root[data-theme="dark"] .stat-card,
+:root[data-theme="dark"] .step,
+:root[data-theme="dark"] .platform-card,
+:root[data-theme="dark"] .download-card,
+:root[data-theme="dark"] .tech-item,
+:root[data-theme="dark"] .donation-card,
+:root[data-theme="dark"] .about-section,
+:root[data-theme="dark"] .contact-info-item,
+:root[data-theme="dark"] .faq-item,
+:root[data-theme="dark"] .login-card,
+:root[data-theme="dark"] .login-info {
+    background-color: #121212;
+    border-color: #2a2a2a;
+}
+
+:root[data-theme="dark"] .contact-form {
+    background-color: #121212;
+}
+
+:root[data-theme="dark"] .form-group input,
+:root[data-theme="dark"] .form-group select,
+:root[data-theme="dark"] .form-group textarea {
+    background-color: #0a0a0a;
+    border-color: #2a2a2a;
+    color: #ffffff;
+}
+
+:root[data-theme="dark"] .form-group input::placeholder,
+:root[data-theme="dark"] .form-group textarea::placeholder {
+    color: #a0a0a0;
+}
+
+/* Links and Interactive Elements */
+:root[data-theme="dark"] a {
+    color: #00a8cc;
+}
+
+:root[data-theme="dark"] .btn-primary {
+    background-color: #00a8cc;
+    color: #000000;
+}
+
+:root[data-theme="dark"] .btn-primary:hover {
+    background-color: #0088aa;
+    box-shadow: 0 0 15px rgba(0, 168, 204, 0.3);
+}
+
+:root[data-theme="dark"] .btn-secondary {
+    color: #00a8cc;
+    border-color: #00a8cc;
+}
+
+:root[data-theme="dark"] .btn-secondary:hover {
+    background-color: #00a8cc;
+    color: #000000;
+}
+
+:root[data-theme="dark"] code {
+    background-color: #0a0a0a;
+    color: #0ff;
+}
+
+/* Badges in Dark Mode */
+:root[data-theme="dark"] .badge.recommended {
+    background-color: #00a8cc;
+    color: #000000;
+}
+
+:root[data-theme="dark"] .badge.experimental {
+    background-color: #f59e0b;
+}
+
+/* Hover States in Dark Mode */
+:root[data-theme="dark"] .stat-card:hover,
+:root[data-theme="dark"] .download-card:hover,
+:root[data-theme="dark"] .platform-card:hover,
+:root[data-theme="dark"] .tech-item:hover,
+:root[data-theme="dark"] .donation-card:hover,
+:root[data-theme="dark"] .step:hover {
+    border-color: #00a8cc;
+    box-shadow: 0 10px 40px rgba(0, 168, 204, 0.15);
+}
+
+:root[data-theme="dark"] .download-card.recommended {
+    border-color: #00a8cc;
+    box-shadow: 0 4px 25px rgba(0, 168, 204, 0.15);
+}
+
+:root[data-theme="dark"] .donation-card.featured {
+    border-color: #00a8cc;
+    box-shadow: 0 10px 40px rgba(0, 168, 204, 0.15);
+}
+
+/* Input Focus States in Dark Mode */
+:root[data-theme="dark"] .form-group input:focus,
+:root[data-theme="dark"] .form-group select:focus,
+:root[data-theme="dark"] .form-group textarea:focus {
+    border-color: #00a8cc;
+    box-shadow: 0 0 0 3px rgba(0, 168, 204, 0.1);
+}
+
+/* Dark Mode Logo Colors */
+:root[data-theme="dark"] .logo-svg {
+    color: #00a8cc;
+}
+
+/* Footer in Dark Mode */
+:root[data-theme="dark"] .footer {
+    background-color: #0a0a0a;
+    border-top: 1px solid #2a2a2a;
+}
+
+/* Required Elements Display */
+:root[data-theme="dark"] .requirements {
+    background-color: #0a0a0a;
+}
+
+/* Download Card in Dark Mode */
+:root[data-theme="dark"] .download-description,
+:root[data-theme="dark"] .option-description {
+    color: #e0e0e0;
+}
+
+/* Smooth Transitions for Theme - Only on specific elements to prevent flicker */
+body,
+.navbar,
+section,
+.navbar-menu a,
+.stat-card,
+.download-card,
+.platform-card,
+.tech-item,
+.donation-card,
+.step,
+.btn-primary,
+.btn-secondary,
+a,
+code,
+.badge,
+.logo-text {
+    transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* No transitions for theme toggle SVG to prevent flicker */
+.theme-toggle svg {
+    transition: none;
+}
+
+/* SVG in content can transition smoothly */
+svg:not(.theme-toggle svg) path,
+svg:not(.theme-toggle svg) circle,
+svg:not(.theme-toggle svg) line {
+    transition: stroke 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                fill 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark mode specific animations */
+@keyframes glow {
+    0%, 100% {
+        text-shadow: 0 0 10px rgba(0, 168, 204, 0.3);
+    }
+    50% {
+        text-shadow: 0 0 15px rgba(0, 168, 204, 0.5);
+    }
+}
+
+/* Glowing accent text in dark mode */
+:root[data-theme="dark"] .stat-number,
+:root[data-theme="dark"] .donation-amount {
+    animation: glow 3s ease-in-out infinite;
+}
+
+/* Selection Colors */
+:root[data-theme="light"] ::selection {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+:root[data-theme="dark"] ::selection {
+    background-color: #00a8cc;
+    color: #000000;
+}
+
+/* Scrollbar Styling */
+:root[data-theme="light"] ::-webkit-scrollbar {
+    width: 10px;
+}
+
+:root[data-theme="light"] ::-webkit-scrollbar-track {
+    background: #f5f5f5;
+}
+
+:root[data-theme="light"] ::-webkit-scrollbar-thumb {
+    background: #000000;
+    border-radius: 5px;
+}
+
+:root[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+    background: #333333;
+}
+
+:root[data-theme="dark"] ::-webkit-scrollbar {
+    width: 10px;
+}
+
+:root[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: #121212;
+}
+
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: #00a8cc;
+    border-radius: 5px;
+}
+
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: #0088aa;
+}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Login - SignFlow{% endblock %}
+
+{% block content %}
+
+<section class="login-section">
+    <div class="login-container">
+        <div class="login-card login-panel">
+            <div class="login-panel-left">
+                <div class="login-header">
+                    <h1>Welcome Back</h1>
+                    <p>Sign in to your SignFlow account</p>
+                </div>
+                <p class="login-intro">Access your live caption settings and keep your SignFlow experience consistent across devices.</p>
+                <div class="login-highlights" aria-hidden="true">
+                    <span class="login-chip">Secure sign-in</span>
+                    <span class="login-chip">Saved layouts</span>
+                    <span class="login-chip">Device sync</span>
+                </div>
+            </div>
+
+            <div class="login-panel-right">
+                {% if form_status %}
+                <div class="form-status form-status-{{ form_status }}" role="status" aria-live="polite">
+                    {{ form_message }}
+                </div>
+                {% endif %}
+                <form class="login-form" action="{{ url_for('login') }}" method="POST">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" placeholder="????????" autocomplete="current-password" required>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox-group">
+                            <input type="checkbox" name="remember">
+                            <span>Remember me</span>
+                        </label>
+                        <a href="{{ url_for('contact') }}" class="forgot-password">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+                </form>
+
+                <div class="login-divider">
+                    <span>or</span>
+                </div>
+
+                <div class="social-login">
+                    <a class="btn btn-social" href="{{ url_for('auth_github') }}">
+                        <span>Sign in with GitHub</span>
+                    </a>
+                    <a class="btn btn-social" href="{{ url_for('auth_google') }}">
+                        <span>Sign in with Google</span>
+                    </a>
+                </div>
+
+                <div class="login-footer">
+                    <p>Don't have an account? <a href="{{ url_for('contact') }}">Sign up here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

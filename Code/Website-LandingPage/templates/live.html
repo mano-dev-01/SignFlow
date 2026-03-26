@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}SignFlow - Live Sign Language Detection{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/live.css') }}">
+
+<div class="live-page" id="live-page" data-server-url="{{ live_server_url }}">
+
+    <!-- ===== Setup Panel ===== -->
+    <div class="live-setup" id="live-setup">
+        <div class="setup-card">
+            <i data-lucide="smartphone" class="setup-icon"></i>
+            <h2>SignFlow Live</h2>
+            <p class="setup-subtitle">Point your camera at sign language gestures and see real-time captions</p>
+
+            <form class="setup-form" id="setup-form">
+                <div style="margin-bottom:1em;padding:0.9rem 1rem;border-radius:10px;background:rgba(15, 23, 42, 0.06);text-align:left;">
+                    <div style="font-weight:600;margin-bottom:0.35rem;">Inference Server</div>
+                    <div style="word-break:break-word;font-size:0.95rem;">{{ live_server_url }}</div>
+                    <input type="hidden" id="server-url" name="server-url" value="{{ live_server_url }}" />
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full" id="start-btn">
+                    Start Session
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== Camera Viewport ===== -->
+    <div class="live-viewport" id="live-viewport">
+        <div class="live-layout">
+            
+            <!-- Top: Camera Section -->
+            <div class="camera-section portrait" id="camera-section">
+                <!-- Loading overlay -->
+                <div class="live-loading" id="live-loading">
+                    <div class="spinner"></div>
+                    <span id="loading-text">Loading MediaPipe models…</span>
+                </div>
+
+                <div class="camera-container">
+                    <video class="camera-video" id="camera-video" autoplay playsinline muted></video>
+                    <canvas class="camera-canvas" id="camera-canvas"></canvas>
+
+                    <!-- Status -->
+                    <div class="live-status" id="live-status">
+                        <span class="status-dot" id="status-dot"></span>
+                        <span id="status-label">Connecting…</span>
+                    </div>
+
+                    <!-- FPS -->
+                    <div class="fps-badge" id="fps-badge">-- fps</div>
+                </div>
+            </div>
+
+            <!-- Bottom: Controls & Captions -->
+
+            <div class="controls-section">
+                <div class="caption-panel">
+                    <div class="caption-pill" id="caption-pill">
+                        <div class="caption-pill-text" id="caption-text">Waiting for signs…</div>
+                        <div class="caption-pill-confidence" id="caption-confidence"></div>
+                    </div>
+                </div>
+
+                <!-- Collapsible Technical Details -->
+                <details class="debug-panel-collapsible" id="debug-panel" style="margin-top: 1em;">
+                  <summary style="font-weight:600;font-size:1.1em;cursor:pointer;outline:none;">Technical Details</summary>
+                  <div class="debug-panel-inner">
+                    <div><b>Server Status:</b> <span id="debug-server-status">-</span></div>
+                    <div><b>Last Request:</b> <span id="debug-last-request">-</span></div>
+                    <div><b>Last Response:</b> <span id="debug-last-response">-</span></div>
+                    <div><b>Last Error:</b> <span id="debug-last-error">-</span></div>
+                  </div>
+                </details>
+
+                <div class="action-buttons">
+                    <button class="live-btn btn-secondary" id="flip-btn">
+                        <i data-lucide="camera" class="btn-icon"></i>
+                        Flip Camera
+                    </button>
+                    <button class="live-btn btn-danger" id="stop-btn">
+                        <i data-lucide="square" class="btn-icon fill-icon"></i>
+                        End Session
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Toast container -->
+<div class="live-toast" id="live-toast"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/live-session.js') }}" type="module"></script>
+{% endblock %}

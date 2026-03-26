@@ -1,0 +1,84 @@
+# OS / editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.hypothesis/
+.ipynb_checkpoints/
+.mypy_cache/
+.nox/
+.pytest_cache/
+.pyre/
+.ruff_cache/
+.tox/
+
+# Virtual environments and local env files
+.env
+.env.*
+!.env.example
+!.env.sample
+.python-version
+.venv/
+ENV/
+env/
+venv/
+Code/.venv/
+Code/ENV/
+Code/env/
+Code/venv/
+
+# Build, packaging, and coverage
+.coverage
+.coverage.*
+.eggs/
+*.egg-info/
+build/
+coverage.xml
+dist/
+htmlcov/
+pip-wheel-metadata/
+site/
+
+# Logs and temporary files
+*.log
+.cache/
+logs/
+temp/
+tmp/
+
+# Local runtime state
+instance/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+Code/instance/
+
+# Frontend package/build outputs
+.next/
+.npm/
+.nuxt/
+.parcel-cache/
+.pnpm-store/
+.svelte-kit/
+.yarn/
+node_modules/
+*.tsbuildinfo
+Code/Website/node_modules/
+
+# Model training artifacts
+Code/Models/*.pth
+
+hf_space/
+hf_upload/

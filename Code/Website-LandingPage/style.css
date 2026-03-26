@@ -1,0 +1,232 @@
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:#f7f9fc;
+color:#111;
+}
+
+/* NAVBAR */
+
+.navbar{
+position:fixed;
+top:0;
+width:100%;
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:20px 80px;
+background:white;
+box-shadow:0 2px 12px rgba(0,0,0,0.05);
+z-index:1000;
+}
+
+.logo-container{
+display:flex;
+align-items:center;
+gap:10px;
+font-weight:600;
+}
+
+.logo{
+width:34px;
+}
+
+.nav-links{
+display:flex;
+gap:30px;
+list-style:none;
+}
+
+.nav-links a{
+text-decoration:none;
+color:#333;
+}
+
+.nav-auth{
+display:flex;
+gap:10px;
+}
+
+.register-btn{
+background:#4b6cff;
+color:white;
+padding:8px 16px;
+border-radius:6px;
+text-decoration:none;
+}
+
+/* HERO */
+
+.hero{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+text-align:center;
+padding:0 20px;
+background:linear-gradient(135deg,#eef2ff,#f7f9fc);
+}
+
+.hero-logo{
+width:90px;
+margin-bottom:20px;
+animation:float 4s ease-in-out infinite;
+}
+
+.hero h1{
+font-size:48px;
+margin-bottom:20px;
+}
+
+.hero p{
+max-width:650px;
+margin:auto;
+margin-bottom:30px;
+color:#555;
+}
+
+.cta-btn{
+background:#4b6cff;
+color:white;
+padding:14px 28px;
+border-radius:8px;
+text-decoration:none;
+}
+
+/* FLOAT ANIMATION */
+
+@keyframes float{
+
+0%{transform:translateY(0)}
+50%{transform:translateY(-10px)}
+100%{transform:translateY(0)}
+
+}
+
+/* DOWNLOAD */
+
+.download-section{
+padding:100px 40px;
+text-align:center;
+}
+
+.platform-row{
+display:flex;
+justify-content:center;
+gap:30px;
+margin-top:40px;
+flex-wrap:wrap;
+}
+
+.download-btn{
+display:flex;
+align-items:center;
+gap:12px;
+padding:12px 22px;
+border:1px solid #ddd;
+border-radius:8px;
+background:white;
+text-decoration:none;
+color:#333;
+transition:0.3s;
+}
+
+.download-btn img{
+width:24px;
+}
+
+.download-btn:hover{
+background:#4b6cff;
+color:white;
+}
+
+/* FEATURES */
+
+.features-section{
+padding:100px 80px;
+text-align:center;
+}
+
+.features-grid{
+display:flex;
+justify-content:center;
+gap:40px;
+margin-top:40px;
+flex-wrap:wrap;
+}
+
+.feature-card{
+background:white;
+padding:30px;
+border-radius:10px;
+box-shadow:0 10px 20px rgba(0,0,0,0.05);
+max-width:260px;
+transition:0.3s;
+}
+
+.feature-card:hover{
+transform:translateY(-8px);
+}
+
+/* ABOUT */
+
+.about-section{
+padding:100px 80px;
+text-align:center;
+max-width:700px;
+margin:auto;
+}
+
+/* DONATE */
+
+.donate-section{
+text-align:center;
+padding:80px;
+background:#eef2ff;
+}
+
+.donate-buttons{
+margin-top:20px;
+display:flex;
+gap:20px;
+justify-content:center;
+}
+
+/* CONTACT */
+
+.contact-section{
+padding:100px 80px;
+text-align:center;
+}
+
+.contact-grid{
+display:flex;
+justify-content:center;
+gap:40px;
+margin-top:40px;
+flex-wrap:wrap;
+}
+
+.contact-item{
+display:flex;
+align-items:center;
+gap:10px;
+}
+
+.contact-item img{
+width:22px;
+}
+
+/* FOOTER */
+
+footer{
+text-align:center;
+padding:40px;
+background:white;
+margin-top:80px;
+}

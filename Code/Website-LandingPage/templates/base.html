@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SignFlow - Real-time Sign Language Prediction{% endblock %}</title>
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+</head>
+<body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <!-- Logo and Project Name -->
+            <a class="navbar-logo" href="{{ url_for('index') }}" aria-label="SignFlow home">
+                <span class="icon icon-logo" data-lucide="hand-metal" aria-hidden="true">🤟</span>
+                <span class="logo-text">SignFlow</span>
+            </a>
+
+            <!-- Navigation Menu -->
+            <div class="navbar-menu" id="nav-menu">
+                <a href="{{ url_for('index') }}#home" class="nav-link nav-home" data-scroll="home">Home</a>
+                <a href="{{ url_for('index') }}#demo" class="nav-link" data-scroll="demo">Demo</a>
+                <a href="{{ url_for('index') }}#why-matters" class="nav-link" data-scroll="why-matters">Why It Matters</a>
+                <a href="{{ url_for('index') }}#how-works" class="nav-link" data-scroll="how-works">How It Works</a>
+                <a href="{{ url_for('index') }}#download" class="nav-link" data-scroll="download">Download</a>
+                <a href="{{ url_for('live') }}" class="nav-link">Try Online</a>
+                <a href="{{ url_for('index') }}#donate" class="nav-link nav-donate" data-scroll="donate">Donate</a>
+                {% if session.get('user') %}
+                <a href="{{ url_for('logout') }}" class="nav-link">Logout ({{ session['user'].get('name', 'User') }})</a>
+                {% else %}
+                <a href="{{ url_for('index') }}#login" class="nav-link" data-scroll="login">Login</a>
+                {% endif %}
+                
+                <!-- Active link indicator -->
+                <div class="nav-underline"></div>
+            </div>
+
+            <div class="navbar-actions">
+                <!-- Theme Toggle -->
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+
+                <!-- Mobile Nav Toggle -->
+                <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-controls="nav-menu" aria-expanded="false">
+                    <span class="nav-toggle-bar"></span>
+                    <span class="nav-toggle-bar"></span>
+                    <span class="nav-toggle-bar"></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="{{ url_for('index') }}">Home</a></li>
+                    <li><a href="{{ url_for('download') }}">Download</a></li>
+                    <li><a href="{{ url_for('index') }}#demo">Live Demo</a></li>
+                    <li><a href="{{ url_for('donate', amount=25) }}">Donate</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="{{ url_for('docs') }}">Documentation</a></li>
+                    <li><a href="{{ url_for('roadmap') }}">Roadmap</a></li>
+                    <li><a href="{{ url_for('changelog') }}">Changelog</a></li>
+                    <li><a href="{{ url_for('accessibility') }}">Accessibility</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Community</h4>
+                <ul>
+                    <li><a href="https://github.com/mano-dev-01/SignFlow-Core" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+                    <li><a href="{{ url_for('contact') }}">Support</a></li>
+                    <li><a href="{{ url_for('status') }}">System Status</a></li>
+                    <li><a href="{{ url_for('newsletter') }}">Newsletter</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 SignFlow. Open-source accessibility technology.</p>
+            <div class="footer-legal">
+                <a href="{{ url_for('privacy') }}">Privacy</a>
+                <a href="{{ url_for('terms') }}">Terms</a>
+                <a href="{{ url_for('press') }}">Press</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/lucide.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/theme-toggle.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/animations.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/demo-animation.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

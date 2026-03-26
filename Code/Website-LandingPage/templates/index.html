@@ -1,0 +1,391 @@
+{% extends "base.html" %}
+
+{% block title %}SignFlow - Where Silent Signs Become a Voice{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<section class="hero" id="home">
+    <div class="hero-background"></div>
+    
+    <div class="hero-content">
+        <h1 class="hero-title" data-animation="fade-in-down">SignFlow</h1>
+        <p class="hero-tagline" data-animation="fade-in-up">Where Silent Signs Become a Voice.</p>
+        <p class="hero-subtitle" data-animation="fade-in-up">Real-time sign language prediction</p>
+        
+        <div class="hero-buttons" data-animation="fade-in-up">
+            <a href="{{ url_for('static', filename='assets/signflow-ily.svg') }}" class="btn btn-primary" download="SignFlow-ILY.svg">Download SignFlow</a>
+            <a href="#how-works" class="btn btn-secondary">See How It Works</a>
+        </div>
+    </div>
+</section>
+
+
+
+<!-- Demo Section -->
+<section id="demo" class="demo-section">
+    <div class="demo-content">
+        <h2>Watch SignFlow in Action</h2>
+        <p class="section-subtitle">A quick visual of how sign language becomes real-time captions.</p>
+
+        <div class="demo-stage">
+            <div class="demo-device" role="img" aria-label="SignFlow demo animation">
+                <div class="demo-screen">
+                    <div class="demo-hands" aria-hidden="true">
+                        <span class="hand-icon hand-left" data-fallback="🤟">🤟</span>
+                        <span class="hand-icon hand-right" data-fallback="✋">✋</span>
+                    </div>
+
+                    <div class="demo-overlay" aria-hidden="true">
+                        <div class="selection-box"></div>
+                        <div class="demo-cursor">
+                            <svg class="cursor-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M4 2 L4 20 L9 15 L12 23 L14 22 L11 14 L18 14 Z"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="demo-processing" aria-hidden="true">
+                        <span class="processing-dot"></span>
+                        <span class="processing-dot"></span>
+                        <span class="processing-dot"></span>
+                    </div>
+                </div>
+
+                <div class="demo-caption">
+                    <span class="caption-label">Live Caption</span>
+                    <span class="caption-text" data-fulltext="SignFlow is wonderful!"></span>
+                    <span class="caption-caret" aria-hidden="true"></span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<div id="demo-detail" class="demo-detail-anchor" aria-hidden="true"></div>
+
+<!-- Why It Matters Section -->
+<section id="why-matters" class="why-matters">
+    <div class="why-matters-content">
+        <h2>Why SignFlow Matters</h2>
+        <p class="section-subtitle">Breaking barriers in communication for the deaf and hard-of-hearing community</p>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">48 Million</div>
+                <p class="stat-label">Deaf and hard-of-hearing people worldwide</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">70%</div>
+                <p class="stat-label">Miss important communications due to lack of accessibility tools</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">Real-time</div>
+                <p class="stat-label">Instant captions powered by AI and computer vision</p>
+            </div>
+        </div>
+
+        <div class="impact-text">
+            <p>SignFlow enables <strong>real-time accessibility</strong> on any platform. By recognizing sign language in real-time, we create a world where silence is no longer a barrier to understanding.</p>
+        </div>
+    </div>
+</section>
+
+<!-- How SignFlow Works Section -->
+<section class="how-it-works" id="how-works">
+    <h2>The SignFlow Pipeline</h2>
+    <div class="vertical-pipeline">
+        <!-- Stage 1 -->
+        <div class="pipeline-item">
+            <div class="pipeline-content">
+                <div class="stage-number">01</div>
+                <div class="stage-icon">
+                    <span class="icon icon-stage" data-lucide="video" aria-hidden="true">📹</span>
+                </div>
+                <h3>Video Capture</h3>
+                <p>Real-time video feed from your screen or camera</p>
+            </div>
+        </div>
+        
+        <!-- Connector -->
+        <div class="pipeline-connector">
+            <svg width="40" height="60" viewBox="0 0 40 60" preserveAspectRatio="none">
+                <defs>
+                    <marker id="arrowdown" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+                        <polygon points="0 0, 8 4, 0 8" fill="currentColor" />
+                    </marker>
+                </defs>
+                <line x1="20" y1="4" x2="20" y2="54" stroke="currentColor" stroke-width="2.5" marker-end="url(#arrowdown)" stroke-linecap="round" />
+            </svg>
+        </div>
+        
+        <!-- Stage 2 -->
+        <div class="pipeline-item">
+            <div class="pipeline-content">
+                <div class="stage-number">02</div>
+                <div class="stage-icon">
+                    <span class="icon icon-stage" data-lucide="hand" aria-hidden="true">👐</span>
+                </div>
+                <h3>Hand Detection</h3>
+                <p>MediaPipe extracts hand landmarks and pose</p>
+            </div>
+        </div>
+        
+        <!-- Connector -->
+        <div class="pipeline-connector">
+            <svg width="40" height="60" viewBox="0 0 40 60" preserveAspectRatio="none">
+                <defs>
+                    <marker id="arrowdown2" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+                        <polygon points="0 0, 8 4, 0 8" fill="currentColor" />
+                    </marker>
+                </defs>
+                <line x1="20" y1="4" x2="20" y2="54" stroke="currentColor" stroke-width="2.5" marker-end="url(#arrowdown2)" stroke-linecap="round" />
+            </svg>
+        </div>
+        
+        <!-- Stage 3 -->
+        <div class="pipeline-item">
+            <div class="pipeline-content">
+                <div class="stage-number">03</div>
+                <div class="stage-icon">
+                    <span class="icon icon-stage" data-lucide="cpu" aria-hidden="true">🤖</span>
+                </div>
+                <h3>ML Inference</h3>
+                <p>Neural network predicts sign language tokens</p>
+            </div>
+        </div>
+        
+        <!-- Connector -->
+        <div class="pipeline-connector">
+            <svg width="40" height="60" viewBox="0 0 40 60" preserveAspectRatio="none">
+                <defs>
+                    <marker id="arrowdown3" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+                        <polygon points="0 0, 8 4, 0 8" fill="currentColor" />
+                    </marker>
+                </defs>
+                <line x1="20" y1="4" x2="20" y2="54" stroke="currentColor" stroke-width="2.5" marker-end="url(#arrowdown3)" stroke-linecap="round" />
+            </svg>
+        </div>
+        
+        <!-- Stage 4 -->
+        <div class="pipeline-item">
+            <div class="pipeline-content">
+                <div class="stage-number">04</div>
+                <div class="stage-icon">
+                    <span class="icon icon-stage" data-lucide="align-left" aria-hidden="true">🧠</span>
+                </div>
+                <h3>LLM Smoothing</h3>
+                <p>LLM refines ASL grammar into natural English phrasing</p>
+            </div>
+        </div>
+
+        <!-- Connector -->
+        <div class="pipeline-connector">
+            <svg width="40" height="60" viewBox="0 0 40 60" preserveAspectRatio="none">
+                <defs>
+                    <marker id="arrowdown4" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+                        <polygon points="0 0, 8 4, 0 8" fill="currentColor" />
+                    </marker>
+                </defs>
+                <line x1="20" y1="4" x2="20" y2="54" stroke="currentColor" stroke-width="2.5" marker-end="url(#arrowdown4)" stroke-linecap="round" />
+            </svg>
+        </div>
+
+        <!-- Stage 5 -->
+        <div class="pipeline-item">
+            <div class="pipeline-content">
+                <div class="stage-number">05</div>
+                <div class="stage-icon">
+                    <span class="icon icon-stage" data-lucide="message-square" aria-hidden="true">💬</span>
+                </div>
+                <h3>Live Captions</h3>
+                <p>English text appears instantly in overlay</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Download Section -->
+<section id="download" class="download-section">
+    <h2>Download SignFlow</h2>
+    <p class="section-subtitle">Choose your platform</p>
+    
+    <div class="download-grid">
+        <div class="download-card recommended">
+            <div class="recommended-badge">Recommended</div>
+            <h3>Windows</h3>
+            <p class="download-description">SignFlow for Windows 10+</p>
+            <a href="{{ url_for('download_windows') }}" class="btn btn-primary">Download for Windows</a>
+            <p class="version-info">Latest: v1.0.0</p>
+        </div>
+        <div class="download-card">
+            <h3>Linux</h3>
+            <p class="download-description">Experimental build for Linux</p>
+            <a href="{{ url_for('download_linux') }}" class="btn btn-secondary">Download for Linux</a>
+            <p class="version-info">Latest: v1.0.0-beta</p>
+        </div>
+        <div class="download-card">
+            <h3>macOS</h3>
+            <p class="download-description">Coming in the next release</p>
+            <a href="{{ url_for('download_macos') }}" class="btn btn-disabled" aria-disabled="true">Coming Soon</a>
+            <p class="version-info">Q4 2026</p>
+        </div>
+    </div>
+    
+    <div class="download-try-online">
+        <div class="download-card featured">
+            <h3>Android</h3>
+            <p class="download-description">Try our live web application right now</p>
+            <a href="{{ url_for('live') }}" class="btn btn-primary">Try Online</a>
+            <p class="version-info">Web Alpha</p>
+        </div>
+    </div>
+</section>
+
+<!-- Open Source Section -->
+<section class="open-source">
+    <div class="open-source-content">
+        <h2>Built with Open-Source Technology</h2>
+        <p class="section-subtitle">Transparent, accessible, community-driven</p>
+        
+        <div class="tech-features">
+            <div class="tech-item">
+                <div class="tech-icon">
+                    <span class="icon icon-tech" data-lucide="eye" aria-hidden="true">👁️</span>
+                </div>
+                <h3>Computer Vision</h3>
+                <p>Advanced visual processing for hand and gesture detection</p>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">
+                    <span class="icon icon-tech" data-lucide="activity" aria-hidden="true">🧠</span>
+                </div>
+                <h3>Machine Learning</h3>
+                <p>Trained models for sign language recognition and prediction</p>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">
+                    <span class="icon icon-tech" data-lucide="hand" aria-hidden="true">🙌</span>
+                </div>
+                <h3>MediaPipe</h3>
+                <p>Robust hand tracking library from Google Research</p>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">
+                    <span class="icon icon-tech" data-lucide="git-branch" aria-hidden="true">🔓</span>
+                </div>
+                <h3>Open Development</h3>
+                <p>Contribute on GitHub and help shape the future of accessibility</p>
+            </div>
+        </div>
+
+        <div class="github-cta">
+            <a href="https://github.com/mano-dev-01/SignFlow-Core" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">View on GitHub</a>
+        </div>
+    </div>
+</section>
+
+<!-- Donation Section -->
+<section id="donate" class="donation-section">
+    <div class="donation-content">
+        <h2>Support SignFlow Development</h2>
+        <p class="section-subtitle">Help us make sign language accessible to everyone</p>
+        
+        <div class="donation-cards">
+            <div class="donation-card">
+                <div class="donation-amount">$5</div>
+                <p class="donation-desc">Coffee & Development</p>
+                <a href="{{ url_for('donate', amount=5) }}" class="btn btn-secondary">Donate</a>
+            </div>
+            <div class="donation-card featured">
+                <div class="donation-amount">$25</div>
+                <p class="donation-desc">Monthly Supporter</p>
+                <a href="{{ url_for('donate', amount=25) }}" class="btn btn-primary">Donate</a>
+            </div>
+            <div class="donation-card">
+                <div class="donation-amount">$100</div>
+                <p class="donation-desc">Research & Innovation</p>
+                <a href="{{ url_for('donate', amount=100) }}" class="btn btn-secondary">Donate</a>
+            </div>
+        </div>
+
+        <p class="donation-message">Every donation directly supports accessibility research, development, and community outreach.</p>
+    </div>
+</section>
+
+<!-- Login Section -->
+<section id="login" class="login-section">
+    <div class="login-container">
+        <div class="login-card login-panel">
+            <div class="login-panel-left">
+                <div class="login-header">
+                    <h1>Welcome Back</h1>
+                    <p>Sign in to your SignFlow account</p>
+                </div>
+                <p class="login-intro">Access your live caption settings and keep your SignFlow experience consistent across devices.</p>
+                <div class="login-highlights" aria-hidden="true">
+                    <span class="login-chip">Secure sign-in</span>
+                    <span class="login-chip">Saved layouts</span>
+                    <span class="login-chip">Device sync</span>
+                </div>
+            </div>
+
+            <div class="login-panel-right">
+                {% if session.get('user') %}
+                <div class="login-header" style="text-align: center; padding: 40px;">
+                    <h2>Welcome, {{ session['user'].get('name', 'User') }}!</h2>
+                    <p>You are securely signed in via Google.</p>
+                    <br>
+                    <a href="{{ url_for('logout') }}" class="btn btn-secondary">Sign Out</a>
+                </div>
+                {% else %}
+                <form class="login-form" action="{{ url_for('login') }}" method="POST">
+                    <div class="form-group">
+                        <label for="login-email">Email Address</label>
+                        <input type="email" id="login-email" name="email" placeholder="you@example.com" autocomplete="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox-group">
+                            <input type="checkbox" name="remember">
+                            <span>Remember me</span>
+                        </label>
+                        <a href="{{ url_for('contact') }}" class="forgot-password">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+                </form>
+
+                <div class="login-divider">
+                    <span>or</span>
+                </div>
+
+                <div class="social-login">
+                    <a class="btn btn-social" href="{{ url_for('auth_github') }}">
+                        <span>Sign in with GitHub</span>
+                    </a>
+                    <a class="btn btn-social" href="{{ url_for('auth_google') }}">
+                        <span>Sign in with Google</span>
+                    </a>
+                </div>
+
+                <div class="login-footer">
+                    <p>Don't have an account? <a href="{{ url_for('contact') }}">Sign up here</a></p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/demo-animation.js') }}"></script>
+{% endblock %}

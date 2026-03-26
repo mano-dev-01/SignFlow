@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Download SignFlow{% endblock %}
+
+{% block content %}
+
+<section class="page-hero">
+    <h1>Download SignFlow</h1>
+    <p>Choose your platform and start enabling real-time sign language accessibility</p>
+</section>
+
+<section class="content-section download-options">
+    <div class="download-options-grid">
+        <div class="download-option">
+            <div class="option-header">
+                <h2>Windows</h2>
+                <span class="badge recommended">Recommended</span>
+            </div>
+            <p class="option-description">Full support for Windows 10 and 11. Optimized performance and all features included.</p>
+            <div class="requirements">
+                <h4>System Requirements</h4>
+                <ul>
+                    <li>Windows 10 or later</li>
+                    <li>4GB RAM minimum</li>
+                    <li>50MB disk space</li>
+                    <li>Webcam or screen share capable</li>
+                </ul>
+            </div>
+            <a href="{{ url_for('download_windows') }}" class="btn btn-primary">Download v1.0.0 (64-bit)</a>
+            <p class="file-info">File size: 145MB | Updated: March 2026</p>
+        </div>
+
+        <div class="download-option">
+            <div class="option-header">
+                <h2>Linux</h2>
+                <span class="badge experimental">Experimental</span>
+            </div>
+            <p class="option-description">Community build for Linux. Full functionality with some edge cases still being tested.</p>
+            <div class="requirements">
+                <h4>System Requirements</h4>
+                <ul>
+                    <li>Ubuntu 20.04 or later / Fedora 33+</li>
+                    <li>4GB RAM minimum</li>
+                    <li>50MB disk space</li>
+                    <li>Python 3.8+</li>
+                </ul>
+            </div>
+            <a href="{{ url_for('download_linux') }}" class="btn btn-secondary">Download v1.0.0-beta (Source)</a>
+            <p class="file-info">File size: 120MB | Updated: March 2026</p>
+        </div>
+
+        <div class="download-option">
+            <div class="option-header">
+                <h2>macOS</h2>
+                <span class="badge coming-soon">Coming Soon</span>
+            </div>
+            <p class="option-description">SignFlow for macOS is in development. Expected release Q4 2026.</p>
+            <div class="requirements">
+                <h4>Planned Requirements</h4>
+                <ul>
+                    <li>macOS 11 or later</li>
+                    <li>4GB RAM minimum</li>
+                    <li>50MB disk space</li>
+                    <li>Apple Silicon or Intel support</li>
+                </ul>
+            </div>
+            <a href="{{ url_for('download_macos') }}" class="btn btn-disabled" aria-disabled="true">Coming Q4 2026</a>
+            <p class="file-info">Sign up for notifications when available</p>
+        </div>
+
+        <div class="download-option">
+            <div class="option-header">
+                <h2>Android</h2>
+                <span class="badge coming-soon">Coming Soon</span>
+            </div>
+            <p class="option-description">SignFlow mobile app for interpreting sign language on the go. Planned release in 2026.</p>
+            <div class="requirements">
+                <h4>System Requirements</h4>
+                <ul>
+                    <li>Android 10 or later</li>
+                    <li>3GB RAM minimum</li>
+                    <li>80MB disk space</li>
+                    <li>Device with camera</li>
+                </ul>
+            </div>
+            <a href="{{ url_for('download_android') }}" class="btn btn-disabled" aria-disabled="true">Coming 2026</a>
+            <p class="file-info">Join the waitlist for early access</p>
+        </div>
+    </div>
+
+    <div class="installation-guide">
+        <h2>Installation Guide</h2>
+        <div class="guide-section">
+            <h3>For Windows</h3>
+            <ol>
+                <li>Download the installer above</li>
+                <li>Run the .exe file</li>
+                <li>Follow the setup wizard</li>
+                <li>Launch SignFlow from your Start menu</li>
+            </ol>
+        </div>
+        <div class="guide-section">
+            <h3>For Linux</h3>
+            <ol>
+                <li>Download the source archive</li>
+                <li>Extract and navigate to the folder</li>
+                <li>Run: <code>pip install -r requirements.txt</code></li>
+                <li>Run: <code>python main.py</code></li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="build-source">
+        <h2>Build from Source</h2>
+        <p>Want to build SignFlow yourself? Clone the repository and follow the development guide in README.md</p>
+        <a href="https://github.com/mano-dev-01/SignFlow-Core" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">View GitHub Repository</a>
+    </div>
+</section>
+
+{% endblock %}

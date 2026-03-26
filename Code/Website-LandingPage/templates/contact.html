@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Contact SignFlow{% endblock %}
+
+{% block content %}
+
+<section class="page-hero">
+    <h1>Get in Touch</h1>
+    <p>Questions, feedback, or want to contribute? We'd love to hear from you.</p>
+</section>
+
+<section class="content-section contact-content">
+    <div class="contact-grid">
+        <div class="contact-form-container">
+            <h2>Send us a Message</h2>
+            {% if form_status %}
+            <div class="form-status form-status-{{ form_status }}" role="status" aria-live="polite">
+                {{ form_message }}
+            </div>
+            {% endif %}
+            {% if form_errors %}
+            <ul class="form-errors">
+                {% for error in form_errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            <form class="contact-form" action="{{ url_for('contact') }}" method="POST">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" autocomplete="name" value="{{ form_data.name if form_data else '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" autocomplete="email" value="{{ form_data.email if form_data else '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject">Subject</label>
+                    <select id="subject" name="subject" required>
+                        <option value="">Select a topic</option>
+                        <option value="support" {% if form_data and form_data.subject == 'support' %}selected{% endif %}>Technical Support</option>
+                        <option value="feedback" {% if form_data and form_data.subject == 'feedback' %}selected{% endif %}>Feedback</option>
+                        <option value="contribute" {% if form_data and form_data.subject == 'contribute' %}selected{% endif %}>Want to Contribute</option>
+                        <option value="partnership" {% if form_data and form_data.subject == 'partnership' %}selected{% endif %}>Partnership</option>
+                        <option value="other" {% if form_data and form_data.subject == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" rows="6" required>{{ form_data.message if form_data else '' }}</textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Send Message</button>
+            </form>
+        </div>
+
+        <div class="contact-info-container">
+            <h2>Direct Contact</h2>
+            
+            <div class="contact-info-item">
+                <h3>Email</h3>
+                <p><a href="mailto:signflow-official@gmail.com">signflow-official@gmail.com</a></p>
+                <p class="info-description">We respond to all inquiries within 48 hours</p>
+            </div>
+
+            <div class="contact-info-item">
+                <h3>GitHub</h3>
+                <p><a href="https://github.com/mano-dev-01/SignFlow-Core" target="_blank" rel="noopener noreferrer">SignFlow Repository</a></p>
+                <p class="info-description">Report issues, request features, or contribute code</p>
+            </div>
+
+            <div class="contact-info-item">
+                <h3>Community</h3>
+                <p>Join our community forum for discussions and support</p>
+                <p class="info-description">Connect with other users and developers</p>
+            </div>
+
+            <div class="contact-info-item">
+                <h3>Social Media</h3>
+                <p>Follow us for updates and announcements</p>
+                <p class="info-description">Find us on Twitter, LinkedIn, and Discord</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        <div class="faq-grid">
+            <div class="faq-item">
+                <h4>How accurate is SignFlow?</h4>
+                <p>SignFlow achieves 85-90% accuracy on recognized signs. Accuracy improves with clear lighting and stable hand visibility.</p>
+            </div>
+            <div class="faq-item">
+                <h4>Does it work with all video platforms?</h4>
+                <p>SignFlow works with any screen-based video feed including Zoom, Teams, YouTube, and recorded videos.</p>
+            </div>
+            <div class="faq-item">
+                <h4>What about other sign languages?</h4>
+                <p>The current version supports ASL. We're working on BSL, LSF, and other sign languages.</p>
+            </div>
+            <div class="faq-item">
+                <h4>Is there a cost?</h4>
+                <p>SignFlow is free and open-source. We accept donations to support development.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

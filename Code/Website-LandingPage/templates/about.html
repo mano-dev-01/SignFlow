@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}About SignFlow{% endblock %}
+
+{% block content %}
+
+<section class="page-hero">
+    <h1>About SignFlow</h1>
+    <p>An accessibility breakthrough in real-time sign language recognition</p>
+</section>
+
+<section class="content-section about-content">
+    <div class="about-grid">
+        <div class="about-section">
+            <h2>Our Mission</h2>
+            <p>SignFlow exists to break down communication barriers for the deaf and hard-of-hearing community. By providing real-time sign language recognition on any platform, we create a world where accessibility isn't an afterthought—it's built in.</p>
+        </div>
+
+        <div class="about-section">
+            <h2>The Problem</h2>
+            <p>Sign language users often face barriers in accessing video content, video calls, and live events. Real-time captioning exists for spoken language, but not for sign language. SignFlow changes that.</p>
+        </div>
+
+        <div class="about-section">
+            <h2>Our Solution</h2>
+            <p>Using computer vision, machine learning, and real-time processing, SignFlow captures sign language from any video feed and instantly displays captions. No additional hardware. No specialized setups. Just accessibility.</p>
+        </div>
+
+        <div class="about-section">
+            <h2>Technology Stack</h2>
+            <ul>
+                <li>MediaPipe for hand landmark detection</li>
+                <li>Deep learning models for sign prediction</li>
+                <li>Real-time processing optimized for speed</li>
+                <li>Cross-platform desktop and mobile support</li>
+                <li>Open-source development model</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="about-cta">
+        <h2>Join the Movement</h2>
+        <p>SignFlow is community-driven. Whether you're a developer, researcher, or someone passionate about accessibility, there's a place for you.</p>
+        <a href="{{ url_for('contact') }}" class="btn btn-primary">Get Involved</a>
+    </div>
+</section>
+
+{% endblock %}
