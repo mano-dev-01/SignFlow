@@ -27,6 +27,7 @@ __pycache__/
 !.env.example
 !.env.sample
 .python-version
+.venv-overlay-build/
 .venv/
 ENV/
 env/
@@ -41,6 +42,11 @@ Code/venv/
 .coverage.*
 .eggs/
 *.egg-info/
+Code/Common/Overlay/build_overlay_remote.ps1
+Code/Common/Overlay/build_overlay_remote.spec
+Code/Common/Overlay/installer/
+Code/Common/Overlay/installer_output/
+Code/Common/Overlay/installer_test/
 build/
 coverage.xml
 dist/

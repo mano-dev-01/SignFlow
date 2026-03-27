@@ -4,6 +4,7 @@ Flask application entry point
 """
 
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 from authlib.integrations.flask_client import OAuth
 from flask_sqlalchemy import SQLAlchemy
@@ -11,7 +12,7 @@ from datetime import datetime
 
 load_dotenv()
 
-from flask import Flask, render_template, request, url_for, session, redirect
+from flask import Flask, render_template, request, url_for, session, redirect, send_file
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'default_secret_key_if_not_set')
@@ -21,6 +22,12 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['LIVE_PREDICTION_SERVER_URL'] = os.environ.get(
     'LIVE_PREDICTION_SERVER_URL',
     'https://mano-dev-01-signflow-inference.hf.space',
+)
+app.config['WINDOWS_INSTALLER_PATH'] = Path(
+    os.environ.get(
+        'SIGNFLOW_WINDOWS_INSTALLER_PATH',
+        Path(__file__).resolve().parents[1] / 'Common' / 'Overlay' / 'installer_output' / 'SignFlowSetup.exe',
+    )
 )
 db = SQLAlchemy(app)
 
@@ -185,24 +192,28 @@ def login():
 
 @app.route('/download/windows')
 def download_windows():
-    return render_placeholder(
-        'Windows Download',
-        'Your SignFlow Windows installer will live here.',
-        'We will connect this to release builds and download analytics in a follow-up step.',
-        cta_label='Back to Downloads',
-        cta_href=url_for('download')
+    installer_path = Path(app.config['WINDOWS_INSTALLER_PATH'])
+    if not installer_path.exists():
+        return render_placeholder(
+            'Windows Download',
+            'The SignFlow Windows installer is not available on this server yet.',
+            'Add SignFlowSetup.exe to the configured installer path and this button will begin downloading it automatically.',
+            cta_label='Back to Downloads',
+            cta_href=url_for('download')
+        )
+
+    return send_file(
+        installer_path,
+        as_attachment=True,
+        download_name='SignFlowSetup.exe',
+        mimetype='application/vnd.microsoft.portable-executable',
+        max_age=0,
     )
 
 
 @app.route('/download/linux')
 def download_linux():
-    return render_placeholder(
-        'Linux Download',
-        'Your SignFlow Linux build will live here.',
-        'We will connect this to source archives and package manager instructions next.',
-        cta_label='Back to Downloads',
-        cta_href=url_for('download')
-    )
+    return redirect('https://github.com/mano-dev-01/SignFlow/tree/main/Code')
 
 
 @app.route('/download/macos')
