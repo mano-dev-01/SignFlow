@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-COMMON_OVERLAY="$SCRIPT_DIR/../Common/Overlay"
+COMMON_OVERLAY="$SCRIPT_DIR/Overlay"
 SERVER_URL="${SIGNFLOW_SERVER_URL:-https://mano-dev-01-signflow-inference.hf.space}"
 
 echo "========================================"
-echo "SignFlow - Running from Code/Mac -> Code/Common/Overlay"
+echo "SignFlow - Running from Code/Mac/Overlay"
 echo "========================================"
 
 echo "[DEBUG] Current folder: $(pwd)"
