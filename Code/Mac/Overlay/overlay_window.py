@@ -1,4 +1,5 @@
 import time
+import sys
 
 from PyQt5.QtCore import (
     QAbstractAnimation,
@@ -109,6 +110,32 @@ from overlay_voice import VoiceToTextWorker
 class OverlayWindow(QWidget):
     def __init__(self, defaults, preferences, debug_captions: bool = False, enable_logging: bool = False):
         super().__init__()
+        
+        # macOS-specific window setup
+        if sys.platform == "darwin":
+            # Set window flags for macOS overlay
+            # Keep WindowStaysOnTopHint so overlay stays visible
+            # But use WA_ShowWithoutActivating so Chrome can still be used
+            self.setWindowFlags(
+                Qt.Window | Qt.FramelessWindowHint | 
+                Qt.WindowStaysOnTopHint |  # Keep overlay visible on top
+                Qt.NoDropShadowWindowHint |
+                Qt.Tool  # Tool window for better integration
+            )
+            
+            # Make overlay non-intrusive - don't steal focus from other apps
+            self.setAttribute(Qt.WA_ShowWithoutActivating, True)  # Don't activate on show
+            self.setFocusPolicy(Qt.NoFocus)  # Don't accept keyboard focus
+            
+            print("[OverlayWindow] macOS overlay configuration applied")
+            print("[OverlayWindow] ⓘ Overlay stays visible while Chrome remains usable")
+            
+            # Add timer to ensure window stays on top when switching apps
+            self._stay_on_top_timer = QTimer(self)
+            self._stay_on_top_timer.timeout.connect(self._ensure_on_top)
+            self._stay_on_top_timer.start(1000)  # Check every 1 second
+        else:
+            self._stay_on_top_timer = None
 
         self.defaults = defaults
         self.preferences = preferences
@@ -187,7 +214,10 @@ class OverlayWindow(QWidget):
 
         set_frame_dispatcher(self._handle_frame)
 
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
+        # Set window flags (already set for macOS in __init__, use defaults for other platforms)
+        if not sys.platform == "darwin":
+            self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
+        
         self.setAttribute(Qt.WA_TranslucentBackground, True)
         QTimer.singleShot(0, lambda: _set_window_excluded_from_capture(self))
 
@@ -237,6 +267,20 @@ class OverlayWindow(QWidget):
     def showEvent(self, event):
         super().showEvent(event)
         _set_window_excluded_from_capture(self)
+
+    def focusOutEvent(self, event):
+        """macOS: Keep overlay visible when it loses focus to Chrome."""
+        super().focusOutEvent(event)
+        if sys.platform == "darwin":
+            # Re-raise to keep visible, but don't steal focus back
+            QTimer.singleShot(100, self._ensure_on_top)
+
+    def changeEvent(self, event):
+        """macOS: Keep overlay on top when switching to other apps."""
+        super().changeEvent(event)
+        if sys.platform == "darwin" and event.type() == 4:  # QEvent.WindowDeactivate
+            # Re-raise on deactivate to keep overlay visible on top
+            QTimer.singleShot(50, self._ensure_on_top)
 
     def _write_preferences(self):
         self.preferences["caption_box_size"] = self.pending_caption_box_size
@@ -381,6 +425,14 @@ class OverlayWindow(QWidget):
             y = geo.y() + geo.height() - self.height() - OVERLAY_MARGIN
 
         self.move(x, y)
+
+    def _ensure_on_top(self):
+        """macOS: Ensure overlay stays visible on top without stealing focus."""
+        if sys.platform == "darwin" and self.isVisible():
+            # Raise the window to front WITHOUT stealing focus
+            self.raise_()
+            # Don't call activateWindow() - that would steal focus from Chrome
+            # Just raising() is enough to keep it on top
 
     def _refresh_window_geometry(self, reposition: bool):
         self.setFixedSize(OVERLAY_WIDTH + (OUTER_PADDING * 2), self._full_window_height())
@@ -790,7 +842,14 @@ class OverlayWindow(QWidget):
             self._stop_capture_thread()
             self.secondary_panel.set_webcam_active(False)
         self.capture_source = "screen"
-        rect = self._rect_to_physical(rect)
+        
+        # For macOS, handle Retina display scaling properly
+        if sys.platform == "darwin":
+            # On macOS, mss uses physical coordinates directly
+            # But Qt uses logical coordinates on Retina displays
+            rect = self._rect_to_physical(rect)
+            print(f"[DEBUG] macOS Retina scaling applied: {rect.x()}, {rect.y()}, {rect.width()}, {rect.height()}")
+        
         self.capture_state = {
             "region": {
                 "x": int(rect.x()),
@@ -803,6 +862,7 @@ class OverlayWindow(QWidget):
         self.first_launch_hint = False
         if self.preview_window is not None:
             self.preview_window.set_region_info(self.capture_state.get("region"), self.first_launch_hint)
+        print(f"[DEBUG] Capture region set: {self.capture_state.get('region')}")
 
     def _rect_to_physical(self, rect: QRect):
         screen = QGuiApplication.screenAt(rect.center())
@@ -869,12 +929,20 @@ class OverlayWindow(QWidget):
             self._start_webcam_capture()
             return
         if not self.capture_state or not self.capture_state.get("region"):
+            print("[overlay_window] ERROR: No capture region set")
             return
+        
+        region = self.capture_state["region"]
+        print(f"[overlay_window] Starting screen capture with region: {region}")
+        
         self._stop_capture_thread()
         self.capture_state["paused"] = False
         self._prepare_live_capture_ui()
+        
+        # Create and start capture thread
+        capture_thread = ScreenCaptureThread(region)
         self._start_frame_thread(
-            ScreenCaptureThread(self.capture_state["region"]),
+            capture_thread,
             "capture_thread",
         )
         self._ensure_hand_worker()
