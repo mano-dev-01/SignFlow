@@ -1,8 +1,8 @@
 ![Team SignFlow](Docs/teamphoto.png)
 
-## TEAM SIGN FLOW
-**PyExpo 2026 | PY072 | KGISL Institute of Technology**
-**Powered by IPS Tech Community**
+# SignFlow
+
+SignFlow is a sign-language-to-text system built around real-time landmark extraction, sequence modeling, remote inference, and caption delivery through an overlay and web interface.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![MediaPipe](https://img.shields.io/badge/MediaPipe-Landmarks-00897B?style=for-the-badge)
@@ -12,291 +12,217 @@
 
 ---
 
-## SIGNFLOW — Real-Time ASL Recognition & Captioning System
+## Overview
 
-SignFlow is an AI-powered system designed to bridge the communication gap for the Deaf and Hard-of-Hearing community through real-time sign language translation.
+The project is organized as a pipeline:
 
-> **"Sign language accessibility — everywhere, in real time."**
+1. Capture visual input from a webcam, screen region, or live source.
+2. Extract hand and pose landmarks with MediaPipe.
+3. Convert landmark sequences into model-ready tensors.
+4. Run sign recognition through a Transformer-based inference stack.
+5. Post-process predictions into readable text.
+6. Render captions in an always-on-top desktop overlay or surface them through the web app.
 
----
-
-## 📋 Project Details
-
-| Field | Details |
-|-------|---------|
-| **Team Name** | SIGNFLOW |
-| **Problem Statement ID** | PY072 |
-| **Problem Statement Title** | ASL TO ENGLISH |
-| **Domain** | AIML |
-| **PS Category** | Software |
+This separation keeps capture, inference, UI, and deployment concerns modular.
 
 ---
 
-## 👥 Team Members
+## Technical Flow
 
-| S.No | Name | Department | Roll No | Role |
-|------|------|------------|---------|------|
-| 1 | **Mano R P** | CYS | 25UCY127 | Overlay Engineer & Core Developer |
-| 2 | **Nithin G** | CYS | 25UCY131 | ML Engineer & Model Architect |
-| 3 | **Amritha N** | CSE | 25UCS107 | Research & Development Engineer |
-| 4 | **Hari Varna V S** | CYS | 25UCY115 |UI&UX , Digital Media & Content Strategist|
-| 5 | **Paul Raja I** | AIDS | 25UAD121 | System Architect & Integration Engineer |
-| 6 | **Nithish A** | AIML | 25UAM212 |  Dataset & Data Pipeline Engineer |
+### 1. Input Acquisition
 
----
+The overlay layer acquires frames from the local device and prepares them for downstream processing. Depending on the execution mode, SignFlow can work with direct webcam input or a remote inference setup where the desktop client only handles capture and presentation.
 
-## 📌 Problem Statement
+### 2. Landmark Extraction
 
-Communication barriers between sign language users and non-signers create challenges in:
+MediaPipe is used to detect hand landmarks and related motion features from each frame. These landmarks are more compact and stable than raw pixels, which makes them a practical representation for real-time sign recognition.
 
-- **Healthcare**
-- **Education**
-- **Public services**
-- **Daily interactions**
+### 3. Sequence Construction
 
-**Challenges Addressed:**
-- Lack of real-time interpreters
-- Limited accessibility tools
-- Difficulty in understanding sign grammar
-- Communication delays
+Detected landmarks are accumulated into temporal windows so the model can reason about motion over time instead of isolated poses. This is important because many signs depend on movement direction, speed, and frame-to-frame continuity.
 
----
+### 4. Model Inference
 
-## 💡 Proposed Solution
+The model stack uses a Transformer-based recognizer to classify sign sequences into text labels. In local workflows this can run directly from the model code, while in deployment-oriented workflows the overlay can send data to a remote inference server and receive predicted text back.
 
-An AI-based real-time translation system that:
+### 5. Text Post-Processing
 
-- Detects hand gestures using computer vision
-- Converts signs into readable text
-- Enhances sentences using LLM-based grammar correction
-- Converts text into speech output
-- Displays captions through an overlay system
+Predictions can be cleaned, corrected, or enhanced before presentation. This stage is where sentence smoothing, grammar assistance, or optional LLM-based refinement can be integrated.
 
-**Innovation:**
-- Bi-directional translation
-- Web-based and scalable
-- Supports regional sign languages
+### 6. Output Delivery
+
+The recognized text is surfaced through two main interfaces:
+
+- A desktop overlay for real-time caption display
+- A Flask web application for product pages, downloads, and service integration
 
 ---
 
-## 🌟 Key Features
+## System Architecture
 
-- Real-time ASL recognition at **30+ FPS**
-- Transformer-based deep learning model with **~95% accuracy**
-- Always-on-top overlay caption system
-- LLM-powered grammar correction and prediction
-- Text-to-speech output
-- Flask-based web interface
-- Scalable for multi-language support
-
----
-
-## 🏗️ System Architecture
-```
-Camera / Screen Input
-        ↓
-MediaPipe (Hand Landmarks)
-        ↓
-Transformer Model (PyTorch)
-        ↓
-Text Output
-        ↓
-LLM Grammar Correction
-        ↓
-Speech Output (Optional)
-        ↓
-Overlay Display (PyQt5)
+```text
+Camera / Live Input
+        |
+        v
+MediaPipe Landmark Extraction
+        |
+        v
+Sequence Builder
+        |
+        v
+Transformer Inference
+        |
+        v
+Text Post-Processing
+        |
+        +--> Desktop Overlay (PyQt5)
+        |
+        +--> Web / Service Layer (Flask)
 ```
 
 ---
 
-## 🧠 Model Details
+## Repository Structure
 
-| Specification | Value |
-|---------------|-------|
-| **Model Type** | Transformer (Landmark-based) |
-| **Accuracy** | ~95% |
-| **Classes** | 58 ASL Signs |
-| **Parameters** | 26.4M |
-| **Inference Speed** | 30+ FPS |
-| **Hardware** | GPU (CUDA) + CPU |
+```text
+Code/
+|-- Common/
+|   |-- Overlay/                # Desktop overlay, packaging, installer flow
+|   `-- Models/                 # Shared model assets such as MediaPipe task files
+|-- Model/                      # Training, inference, and model-serving code
+|-- Website-LandingPage/        # Flask site, auth flow, downloads, static assets
+`-- ...
+
+Docs/                           # SOP, demo assets, project media
+```
+
+The exact folders may evolve, but the repo is generally split into:
+
+- `Model`: training and inference logic
+- `Common/Overlay`: desktop client and Windows packaging
+- `Website-LandingPage`: public-facing web application
+- `Docs`: supporting documents and media
 
 ---
 
-## 🧰 Tech Stack
+## Core Components
+
+### Model Layer
+
+Contains training, inference, dataset handling, model weights, and server-side prediction logic. This is the computational core of the project.
+
+### Overlay Layer
+
+Contains the caption UI, capture logic, runtime configuration, and packaged Windows distribution flow. The recent setup process builds this as a desktop app named `SignFlow`.
+
+### Web Layer
+
+Contains the Flask app that powers the landing page, authentication, demo pages, and platform-specific download routes.
+
+---
+
+## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
-| **Frontend** | PyQt5 |
-| **Backend** | Python, Flask |
-| **AI/ML** | PyTorch, Transformer |
-| **Computer Vision** | OpenCV, MediaPipe |
-| **LLM** | Ollama / Google Gemini |
-| **Dataset** | MS-ASL, WLASL |
+| Capture / CV | OpenCV, MediaPipe |
+| Recognition | PyTorch, Transformer models |
+| Desktop UI | PyQt5 |
+| Web App | Flask |
+| Packaging | PyInstaller, Inno Setup |
+| Optional Text Refinement | LLM-assisted post-processing |
 
 ---
 
-## 📊 Applications
+## Local Setup
 
-- **Healthcare** communication
-- **Classroom** accessibility
-- **Public service** interaction
-- **Everyday** conversations
-
----
-
-## 📁 Project Structure
-```
-PY26072/
-│
-├── 📁 Code/
-│   ├── 📁 Model/
-│   │   ├── sign_inference.py        # Main inference script
-│   │   ├── server.py                # Model API server
-│   │   ├── llm_helper.py            # LLM grammar correction
-│   │   ├── train_model.py           # Training script
-│   │   ├── 📁 models/               # Saved model weights
-│   │   ├── 📁 mediapipe_models/     # MediaPipe config files
-│   │   └── requirements.txt         # Model dependencies
-│   │
-│   ├── 📁 SignFlow-Core/
-│   │   ├── overlay.py               # Main overlay launcher
-│   │   ├── overlay_window.py        # Overlay UI window
-│   │   ├── overlay_capture.py       # Screen/webcam capture
-│   │   ├── overlay_hand_tracking.py # Hand tracking module
-│   │   ├── overlay_voice.py         # Voice-to-text module
-│   │   ├── 📁 models/               # Local model files
-│   │   ├── 📁 misc/                 # Assets and config
-│   │   └── requirements.txt         # Overlay dependencies
-│   │
-│   └── 📁 SignFlow_Landing_Page/
-│       ├── main.py                  # Flask app entry point
-│       ├── 📁 templates/            # HTML templates
-│       ├── 📁 static/               # CSS, JS, images
-│       └── requirements.txt         # Web app dependencies
-│
-├── 📁 Docs/
-│   ├── SignFlow_SOP.pdf             # Standard Operating Procedure
-│   ├── teamphoto.png                # Team photo
-│   └── Signflow(demo).mp4           # Demo video
-│
-└── run_signflow.bat                 # One-click launcher
-```
-
----
-
-## ⚙️ Installation & Setup
-
-**1. Clone Repository**
 ```bash
-git clone https://github.com/PyExpo2K26/PY26072.git
-cd PY26072
-```
-
-**2. Create Virtual Environment**
-```bash
+git clone https://github.com/mano-dev-01/SignFlow.git
+cd SignFlow
 python -m venv venv
 ```
 
-**3. Activate Environment**
+Activate the environment:
+
 ```bash
 # Windows
 venv\Scripts\activate
 
-# macOS/Linux
+# macOS / Linux
 source venv/bin/activate
 ```
 
-**4. Install Dependencies**
-```bash
-pip install -r requirements.txt
-```
+Install project dependencies according to the component you want to run. Different folders may maintain their own requirements files.
 
 ---
 
-## 🚀 Run the Project
+## Running The Project
 
-**One-Click Launch**
-```bash
-run_signflow.bat
-```
+### Model / Inference
 
-**Run Model**
+Run the model entry points from the model module you are working with.
+
 ```bash
 cd Code/Model
-python sign_inference.py --llm local
+python sign_inference.py
 ```
 
-**Run Overlay App**
+### Overlay
+
+Run the desktop overlay from the overlay module during development.
+
 ```bash
-cd Code/SignFlow-Core
-python overlay.py
+cd Code/Common/Overlay
+python -m signflow_overlay
 ```
 
-**Run Web App**
+### Website
+
+Run the Flask site locally:
+
 ```bash
-cd Code/SignFlow_Landing_Page
+cd Code/Website-LandingPage
 python main.py
-# Open: http://localhost:5000
 ```
 
----
-
-## 🔮 Future Enhancements
-
-- Support for **regional sign languages** (ISL, etc.)
-- **Mobile live networking** and streaming support
-- **Larger vocabulary** (1000+ signs)
-- **Full real-time** conversation system
+Then open `http://localhost:5000`.
 
 ---
 
-## 📄 Documentation
+## Windows Packaging Flow
+
+The Windows desktop distribution is built in two stages:
+
+1. PyInstaller generates the packaged `SignFlow` application.
+2. Inno Setup wraps that packaged app into `SignFlowSetup.exe`.
+
+This approach keeps the runtime portable for end users while preserving a normal installer experience with shortcuts and uninstall support.
+
+---
+
+## Deployment Notes
+
+- The Flask site handles download routing for platform-specific installers.
+- The Windows installer can be hosted as a GitHub Release asset.
+- The overlay can be configured to talk to a remote inference server through runtime configuration or environment variables.
+
+---
+
+## Documentation
 
 <table>
 <tr>
 <td align="center">
 <a href="Docs/SignFlow_SOP%20_PY072.pdf">
-<img src="https://img.shields.io/badge/-📋%20SOP%20Document-navy?style=for-the-badge&logoColor=white" />
+<img src="https://img.shields.io/badge/-SOP%20Document-navy?style=for-the-badge&logoColor=white" />
 <br/>Standard Operating Procedure
 </a>
 </td>
 <td align="center">
 <a href="Docs/Signflow(%20demo).mp4">
-<img src="https://img.shields.io/badge/-🎬%20Demo%20Video-darkred?style=for-the-badge&logoColor=white" />
+<img src="https://img.shields.io/badge/-Demo%20Video-darkred?style=for-the-badge&logoColor=white" />
 <br/>Watch Demo
 </a>
 </td>
-<td align="center">
-<a href="Docs/Team%20Name%20-%20SIGNFLOW%20Problem%20Statement%20ID%20-%20PY072%20Problem%20Statement%20Title%20-%20ASL%20TO%20ENGLISH%20Domain-%20AIML%20PS%20Category-%20Software%20Industry%20Mentor%20-%20Student%20Mentor%20-.pdf">
-<img src="https://img.shields.io/badge/-📊%20Presentation-darkorange?style=for-the-badge&logoColor=white" />
-<br/>View Slides
-</a>
-</td>
 </tr>
 </table>
-
----
-
-## 🌐 Connect With Us
-
-<table>
-<tr>
-<td align="center">
-<a href="https://www.instagram.com/signflow_pyexpo">
-<img src="https://img.shields.io/badge/-Follow%20Us%20on%20Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white" />
-<br/>@signflow_pyexpo
-</a>
-</td>
-<td align="center">
-<a href="https://github.com/PyExpo2K26/PY26072">
-<img src="https://img.shields.io/badge/-View%20on%20GitHub-181717?style=for-the-badge&logo=github&logoColor=white" />
-<br/>PyExpo2K26 / PY26072
-</a>
-</td>
-</tr>
-</table>
-
----
-
-**Developed by Team SignFlow | PyExpo 2026 | KGISL Institute of Technology**
