@@ -15,6 +15,7 @@ except ImportError:
     print('[OVERLAY_REMOTE] WARNING: PyQt5 is not installed. run pip install pyqt5')
 
 from overlay_preferences import ensure_preferences_files
+from overlay_utils import configure_macos_app
 
 from .config import AUTO_WEBCAM_DELAY_MS, CAMERA_SCAN_LIMIT, DEFAULT_SERVER_URL
 from .remote_window import RemoteOverlayWindow
@@ -136,13 +137,18 @@ def build_argument_parser():
 
 def main(argv=None):
     configure_runtime()
+    configure_macos_app()
     parser = build_argument_parser()
     args, qt_args = parser.parse_known_args(argv)
+    auto_webcam_enabled = bool(args.auto_webcam and not args.no_webcam)
 
     print("[OVERLAY_REMOTE] ========================================")
     print("[OVERLAY_REMOTE] SignFlow Overlay - Remote Mode")
     print(f"[OVERLAY_REMOTE] Server: {args.server}")
-    print("[OVERLAY_REMOTE] Camera starts when you click the webcam button")
+    if auto_webcam_enabled:
+        print(f"[OVERLAY_REMOTE] Auto webcam: ON (delay {AUTO_WEBCAM_DELAY_MS}ms)")
+    else:
+        print("[OVERLAY_REMOTE] Camera starts when you click the webcam button")
     print("[OVERLAY_REMOTE] ========================================")
 
     scan_available_cameras()
@@ -152,7 +158,8 @@ def main(argv=None):
     if QApplication is None:
         raise RuntimeError('PyQt5 is required to run the overlay. Please install it via pip install pyqt5')
 
-    app = QApplication([sys.argv[0], *qt_args])
+    app_argv = [sys.argv[0], *qt_args]
+    app = QApplication(app_argv)
     app.setQuitOnLastWindowClosed(True)
 
     overlay = RemoteOverlayWindow(
@@ -163,9 +170,8 @@ def main(argv=None):
         server_url=args.server,
     )
     overlay.show()
-    overlay.raise_()
 
-    if args.auto_webcam and not args.no_webcam:
+    if auto_webcam_enabled:
         print(f"[OVERLAY_REMOTE] Scheduling webcam auto-start in {AUTO_WEBCAM_DELAY_MS}ms...")
         QTimer.singleShot(AUTO_WEBCAM_DELAY_MS, overlay.auto_start_webcam)
 

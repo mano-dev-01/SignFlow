@@ -3,6 +3,7 @@ import random
 import sys
 import warnings
 
+
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QFontMetrics
 from PyQt5.QtWidgets import QApplication
@@ -16,6 +17,7 @@ from overlay_constants import (
     PRIMARY_INNER_SPACING,
 )
 from overlay_preferences import ensure_preferences_files
+from overlay_utils import configure_macos_app, configure_macos_overlay
 from overlay_window import OverlayWindow
 
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
@@ -144,6 +146,8 @@ class CaptionSimulator:
 def main():
     defaults, preferences = ensure_preferences_files()
 
+    configure_macos_app()
+
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(True)
 
@@ -154,6 +158,10 @@ def main():
         enable_logging=ENABLE_LOGGING,
     )
     overlay.show()
+
+    from PyQt5.QtCore import QTimer
+    QTimer.singleShot(500, lambda: configure_macos_overlay(overlay))
+    QTimer.singleShot(1500, lambda: configure_macos_overlay(overlay))
 
     if DEBUG_CAPTIONS:
         overlay._caption_simulator = CaptionSimulator(overlay)

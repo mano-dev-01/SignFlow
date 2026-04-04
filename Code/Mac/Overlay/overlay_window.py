@@ -2,7 +2,7 @@ import time
 import sys
 
 import mss
-
+from PyQt5.QtCore import QEvent
 from PyQt5.QtCore import (
     QAbstractAnimation,
     QEasingCurve,
@@ -137,6 +137,14 @@ class OverlayWindow(QWidget):
         self.debug_captions = bool(debug_captions)
         self.caption_text = LABEL_DEFAULT_TEXT
         self._caption_mode = "init"
+        # macOS overlay stability fix
+        if sys.platform == "darwin":
+            self._macos_fix_timer = QTimer(self)
+            self._macos_fix_timer.setInterval(1200)
+            self._macos_fix_timer.timeout.connect(self._reapply_macos_config)
+            self._macos_fix_timer.start()
+        else:
+            self._macos_fix_timer = None
         self._has_prediction = False
         self._caption_history_text = ""
         self._last_caption_display = ""
@@ -262,7 +270,13 @@ class OverlayWindow(QWidget):
     def showEvent(self, event):
         super().showEvent(event)
         _set_window_excluded_from_capture(self)
-        _configure_macos_overlay_window(self)
+
+        QTimer.singleShot(0, lambda: _configure_macos_overlay_window(self))
+        QTimer.singleShot(300, lambda: _configure_macos_overlay_window(self))
+
+    def _reapply_macos_config(self):
+        if sys.platform == "darwin" and self.isVisible():
+            _configure_macos_overlay_window(self)
 
     def set_overlay_click_through(self, enabled: bool):
         self.overlay_click_through = bool(enabled)
@@ -781,8 +795,6 @@ class OverlayWindow(QWidget):
         self.selection_overlay.selection_confirmed.connect(self._on_region_selected)
         self.selection_overlay.selection_cancelled.connect(self._on_region_selection_cancelled)
         self.selection_overlay.show()
-        self.selection_overlay.raise_()
-        self.selection_overlay.activateWindow()
 
     def _on_region_selected(self, rect: QRect):
         if self.selection_overlay is not None:
@@ -808,7 +820,6 @@ class OverlayWindow(QWidget):
             self.highlight_overlay.close()
         self.highlight_overlay = HighlightOverlay(rect)
         self.highlight_overlay.show()
-        self.highlight_overlay.raise_()
         QTimer.singleShot(HIGHLIGHT_DURATION_MS, self._finish_capture_start)
 
     def _finish_capture_start(self):
@@ -1260,6 +1271,11 @@ class OverlayWindow(QWidget):
         except Exception:
             pass
         self.voice_worker = None
+    def event(self, e):
+        result = super().event(e)
+        if sys.platform == "darwin" and e.type() in (QEvent.WindowActivate, QEvent.WindowDeactivate):
+            QTimer.singleShot(0, lambda: _configure_macos_overlay_window(self))
+        return result
 
     def _on_voice_text(self, text: str):
         if not self.voice_active:
