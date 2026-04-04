@@ -234,6 +234,8 @@ def auth_google():
         )
 
     redirect_uri = app.config.get('GOOGLE_REDIRECT_URI') or url_for('auth_google_callback', _external=True)
+    if app.debug:
+        redirect_uri = url_for('auth_google_callback', _external=True)
     return google.authorize_redirect(redirect_uri)
 
 

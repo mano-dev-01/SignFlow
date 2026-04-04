@@ -346,6 +346,19 @@ body {
     font-weight: 700;
 }
 
+.logout-link {
+    display: inline-block;
+    margin-top: 0.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: var(--font-size-sm);
+}
+
+.logout-link:hover {
+    color: var(--accent);
+    text-decoration: underline;
+}
+
 :root[data-theme="dark"] .nav-link:hover {
     color: transparent;
     background-image: var(--text-gradient);
