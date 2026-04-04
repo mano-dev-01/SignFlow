@@ -1,7 +1,11 @@
+from __future__ import annotations
+
+import ctypes
 import os
 import random
 import sys
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage
 
 from overlay_constants import EXCLUDE_OVERLAY_FROM_CAPTURE
@@ -36,8 +40,15 @@ def generate_fake_status(system_state: str):
     left_conf = random.random() if hands >= 1 else 0.0
     right_conf = random.random() if hands == 2 else 0.0
     fps = random.randint(20, 30)
-    model_state = random.choice(["Idle", "Detecting Hands", "Processing Frame", "Waiting for Input"])
-    capture_state = "Active" if system_state == "Running" else ("Paused" if system_state == "Paused" else "Idle")
+    model_state = random.choice(
+        ["Idle", "Detecting Hands", "Processing Frame", "Waiting for Input"]
+    )
+    capture_state = (
+        "Active"
+        if system_state == "Running"
+        else ("Paused" if system_state == "Paused" else "Idle")
+    )
+
     return {
         "System": system_state,
         "Capture Region": capture_state,
@@ -52,24 +63,91 @@ def generate_fake_status(system_state: str):
 def _frame_to_qimage(frame):
     if not isinstance(frame, dict):
         return None
+
     rgb = frame.get("rgb")
     width = int(frame.get("width", 0) or 0)
     height = int(frame.get("height", 0) or 0)
+
     if rgb is None or width <= 0 or height <= 0:
         return None
+
     bytes_per_line = width * 3
     image = QImage(rgb, width, height, bytes_per_line, QImage.Format_RGB888)
     return image.copy()
 
 
+# ---------------- WINDOWS ----------------
 def _set_window_excluded_from_capture(widget):
     if sys.platform != "win32":
         return
-    try:
-        import ctypes
 
+    try:
         hwnd = int(widget.winId())
         affinity = 0x11 if EXCLUDE_OVERLAY_FROM_CAPTURE else 0x00
         ctypes.windll.user32.SetWindowDisplayAffinity(hwnd, affinity)
     except Exception:
         pass
+
+
+def _guess_overlay_role(widget) -> str:
+    name = type(widget).__name__.lower()
+    if "preview" in name:
+        return "preview"
+    if "selection" in name or "highlight" in name:
+        return "selection"
+    return "overlay"
+
+
+def _get_macos_controller():
+    if sys.platform != "darwin":
+        return None
+    try:
+        from macos_overlay_controller import get_macos_overlay_controller
+
+        return get_macos_overlay_controller()
+    except Exception as exc:
+        print(f"[overlay_utils] macOS controller unavailable: {exc}")
+        return None
+
+
+# ---------------- MACOS ----------------
+def configure_macos_app():
+    controller = _get_macos_controller()
+    if controller is not None:
+        controller.configure_app_policy()
+
+
+def configure_macos_overlay(widget):
+    controller = _get_macos_controller()
+    if controller is not None:
+        controller.register_window(widget, role=_guess_overlay_role(widget))
+
+
+def configure_macos_overlay_v2(widget):
+    configure_macos_overlay(widget)
+
+
+def configure_macos_overlay_refresh(widget):
+    controller = _get_macos_controller()
+    if controller is not None:
+        controller.refresh_window(widget)
+
+
+def _configure_macos_overlay_window(widget):
+    controller = _get_macos_controller()
+    if controller is None:
+        return
+    controller.register_window(widget, role=_guess_overlay_role(widget))
+    controller.refresh_window(widget)
+
+
+def configure_macos_overlay_final(widget):
+    _configure_macos_overlay_window(widget)
+
+
+def configure_macos_overlay_ultra(widget):
+    _configure_macos_overlay_window(widget)
+
+
+def configure_macos_overlay_with_notifications(widget):
+    _configure_macos_overlay_window(widget)

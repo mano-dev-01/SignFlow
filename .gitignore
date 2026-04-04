@@ -7,7 +7,7 @@ Desktop.ini
 *.swp
 *.swo
 *~
-
+.venv-build/
 # Python bytecode and caches
 __pycache__/
 *.py[cod]
@@ -88,3 +88,11 @@ Code/Models/*.pth
 
 hf_space/
 hf_upload/
+
+# macOS local build/release artifacts
+.venv-build/
+Code/Mac/.venv/
+Code/Mac/venv/
+*.dmg
+*.pkg
+*.mpkg

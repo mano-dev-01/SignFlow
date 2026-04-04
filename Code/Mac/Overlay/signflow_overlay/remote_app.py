@@ -15,6 +15,7 @@ except ImportError:
     print('[OVERLAY_REMOTE] WARNING: PyQt5 is not installed. run pip install pyqt5')
 
 from overlay_preferences import ensure_preferences_files
+from overlay_utils import configure_macos_app
 
 from .config import AUTO_WEBCAM_DELAY_MS, CAMERA_SCAN_LIMIT, DEFAULT_SERVER_URL
 from .remote_window import RemoteOverlayWindow
@@ -29,6 +30,13 @@ def configure_runtime():
         message=r"SymbolDatabase\.GetPrototype\(\) is deprecated.*",
     )
 
+    # macOS-specific configuration
+    if sys.platform == "darwin":
+        print("[OVERLAY_REMOTE] macOS detected - configuring native frameworks")
+        os.environ.setdefault("DYLD_LIBRARY_PATH", "/usr/local/lib:/opt/local/lib")
+        # Ensure proper display handling on macOS
+        os.environ.setdefault("QT_QPA_PLATFORM", "cocoa")
+
     # Ensure module import paths for this repo layout:
     root = Path(__file__).resolve().parents[2]
     model_dir = root / 'Model_inference'
@@ -42,6 +50,20 @@ def configure_runtime():
     except ImportError:
         print('[OVERLAY_REMOTE] WARNING: numpy is not installed. run pip install -r requirements.txt')
 
+    # Verify key dependencies on macOS
+    if sys.platform == "darwin":
+        try:
+            import cv2  # noqa: F401
+            print("[OVERLAY_REMOTE] ✓ OpenCV available")
+        except ImportError:
+            print("[OVERLAY_REMOTE] WARNING: OpenCV not available on macOS")
+        
+        try:
+            from PyQt5 import QtCore  # noqa: F401
+            print("[OVERLAY_REMOTE] ✓ PyQt5 available")
+        except ImportError:
+            print("[OVERLAY_REMOTE] WARNING: PyQt5 not available on macOS")
+
 
 def scan_available_cameras(max_index: int = CAMERA_SCAN_LIMIT):
     print("[OVERLAY_REMOTE] Scanning for cameras...")
@@ -52,26 +74,48 @@ def scan_available_cameras(max_index: int = CAMERA_SCAN_LIMIT):
         return []
 
     found = []
-    for camera_index in range(max_index):
-        try:
-            capture = cv2.VideoCapture(camera_index, cv2.CAP_ANY)
-            if capture.isOpened():
-                readable, _ = capture.read()
-                if readable:
-                    found.append(camera_index)
-                    print(f"[OVERLAY_REMOTE]   Camera {camera_index}: OK (readable)")
-                else:
-                    print(f"[OVERLAY_REMOTE]   Camera {camera_index}: opens but read failed")
-                capture.release()
-        except Exception as exc:
-            print(f"[OVERLAY_REMOTE]   Camera {camera_index}: error - {exc}")
+    
+    # macOS camera scanning with proper handling
+    if sys.platform == "darwin":
+        print("[OVERLAY_REMOTE] Using macOS camera detection")
+        for camera_index in range(max_index):
+            try:
+                # macOS uses CAP_ANY for native framework selection
+                capture = cv2.VideoCapture(camera_index, cv2.CAP_ANY)
+                if capture.isOpened():
+                    # Try reading a frame to verify camera is functional
+                    ret, frame = capture.read()
+                    if ret and frame is not None:
+                        found.append(camera_index)
+                        print(f"[OVERLAY_REMOTE]   Camera {camera_index}: ✓ OK (readable)")
+                    else:
+                        print(f"[OVERLAY_REMOTE]   Camera {camera_index}: opens but read failed")
+                    capture.release()
+            except Exception as exc:
+                print(f"[OVERLAY_REMOTE]   Camera {camera_index}: error - {exc}")
+    else:
+        # Generic camera scanning for other platforms
+        for camera_index in range(max_index):
+            try:
+                capture = cv2.VideoCapture(camera_index, cv2.CAP_ANY)
+                if capture.isOpened():
+                    readable, _ = capture.read()
+                    if readable:
+                        found.append(camera_index)
+                        print(f"[OVERLAY_REMOTE]   Camera {camera_index}: OK (readable)")
+                    else:
+                        print(f"[OVERLAY_REMOTE]   Camera {camera_index}: opens but read failed")
+                    capture.release()
+            except Exception as exc:
+                print(f"[OVERLAY_REMOTE]   Camera {camera_index}: error - {exc}")
 
     if found:
         print(f"[OVERLAY_REMOTE] Cameras found: {found}")
     else:
         print("[OVERLAY_REMOTE] WARNING: No readable cameras found!")
         print("[OVERLAY_REMOTE]   - Make sure no other app is using the camera")
-        print("[OVERLAY_REMOTE]   - Try closing browser tabs / Teams / Zoom")
+        print("[OVERLAY_REMOTE]   - Ensure camera permissions are granted in System Preferences")
+        print("[OVERLAY_REMOTE]   - Try closing browser tabs / Teams / Zoom / other apps using camera")
     return found
 
 
@@ -93,13 +137,18 @@ def build_argument_parser():
 
 def main(argv=None):
     configure_runtime()
+    configure_macos_app()
     parser = build_argument_parser()
     args, qt_args = parser.parse_known_args(argv)
+    auto_webcam_enabled = bool(args.auto_webcam and not args.no_webcam)
 
     print("[OVERLAY_REMOTE] ========================================")
     print("[OVERLAY_REMOTE] SignFlow Overlay - Remote Mode")
     print(f"[OVERLAY_REMOTE] Server: {args.server}")
-    print("[OVERLAY_REMOTE] Camera starts when you click the webcam button")
+    if auto_webcam_enabled:
+        print(f"[OVERLAY_REMOTE] Auto webcam: ON (delay {AUTO_WEBCAM_DELAY_MS}ms)")
+    else:
+        print("[OVERLAY_REMOTE] Camera starts when you click the webcam button")
     print("[OVERLAY_REMOTE] ========================================")
 
     scan_available_cameras()
@@ -109,7 +158,8 @@ def main(argv=None):
     if QApplication is None:
         raise RuntimeError('PyQt5 is required to run the overlay. Please install it via pip install pyqt5')
 
-    app = QApplication([sys.argv[0], *qt_args])
+    app_argv = [sys.argv[0], *qt_args]
+    app = QApplication(app_argv)
     app.setQuitOnLastWindowClosed(True)
 
     overlay = RemoteOverlayWindow(
@@ -120,9 +170,8 @@ def main(argv=None):
         server_url=args.server,
     )
     overlay.show()
-    overlay.raise_()
 
-    if args.auto_webcam and not args.no_webcam:
+    if auto_webcam_enabled:
         print(f"[OVERLAY_REMOTE] Scheduling webcam auto-start in {AUTO_WEBCAM_DELAY_MS}ms...")
         QTimer.singleShot(AUTO_WEBCAM_DELAY_MS, overlay.auto_start_webcam)
 

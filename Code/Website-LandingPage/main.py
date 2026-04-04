@@ -5,9 +5,7 @@ Flask application entry point
 
 import os
 from dotenv import load_dotenv
-from authlib.integrations.flask_client import OAuth
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
 
 load_dotenv()
 
@@ -31,11 +29,8 @@ db = SQLAlchemy(app)
 # User Model
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    google_id = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     name = db.Column(db.String(100))
-    picture = db.Column(db.String(255))
-    last_login = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
         return f'<User {self.email}>'
@@ -43,16 +38,6 @@ class User(db.Model):
 # Initialize Database
 with app.app_context():
     db.create_all()
-
-oauth = OAuth(app)
-google = oauth.register(
-    name='google',
-    client_id=os.environ.get('GOOGLE_CLIENT_ID'),
-    client_secret=os.environ.get('GOOGLE_CLIENT_SECRET'),
-    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-    client_kwargs={'scope': 'openid email profile'},
-)
-
 
 def render_placeholder(title, description, detail, cta_label='Return home', cta_href=None):
     if cta_href is None:
@@ -229,60 +214,6 @@ def donate(amount):
         cta_href=f"{url_for('index')}#donate"
     )
 
-
-@app.route('/auth/github')
-def auth_github():
-    return render_placeholder(
-        'GitHub Sign-In',
-        'GitHub OAuth will be wired here.',
-        'We will add the OAuth flow and account linking when authentication is enabled.',
-        cta_label='Back to Sign In',
-        cta_href=url_for('login')
-    )
-
-
-@app.route('/auth/google')
-def auth_google():
-    """Google Sign-In route"""
-    redirect_uri = url_for('auth_google_callback', _external=True)
-    return google.authorize_redirect(redirect_uri)
-
-@app.route('/auth/google/callback')
-def auth_google_callback():
-    """Google Sign-In callback"""
-    token = google.authorize_access_token()
-    user_info = token.get('userinfo')
-    
-    if user_info:
-        # Persistence Logic
-        user = User.query.filter_by(google_id=user_info['sub']).first()
-        
-        if not user:
-            # Create new user
-            user = User(
-                google_id=user_info['sub'],
-                email=user_info['email'],
-                name=user_info.get('name'),
-                picture=user_info.get('picture')
-            )
-            db.session.add(user)
-        else:
-            # Update existing user
-            user.name = user_info.get('name')
-            user.picture = user_info.get('picture')
-            user.last_login = datetime.utcnow()
-        
-        db.session.commit()
-        
-        # Store essential info in session
-        session['user'] = {
-            'id': user.id,
-            'email': user.email,
-            'name': user.name,
-            'picture': user.picture
-        }
-        
-    return redirect(url_for('index'))
 
 @app.route('/logout')
 def logout():

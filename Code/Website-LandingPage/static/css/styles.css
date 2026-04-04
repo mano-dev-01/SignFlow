@@ -2119,35 +2119,6 @@ code {
     text-decoration: underline;
 }
 
-.login-divider {
-    position: relative;
-    text-align: center;
-    margin: var(--spacing-md) 0;
-    color: var(--text-tertiary);
-}
-
-.login-divider::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background-color: var(--border-color);
-}
-
-.login-divider span {
-    background-color: var(--bg-secondary);
-    padding: 0 var(--spacing-sm);
-    position: relative;
-}
-
-.social-login {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-}
-
 .login-footer {
     text-align: left;
     padding: var(--spacing-sm) 0 0;

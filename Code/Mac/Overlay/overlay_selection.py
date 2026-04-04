@@ -1,4 +1,6 @@
-from PyQt5.QtCore import QPoint, QRect, QRectF, Qt, pyqtSignal
+import sys
+
+from PyQt5.QtCore import QTimer, QPoint, QRect, QRectF, Qt, pyqtSignal
 from PyQt5.QtGui import QColor, QFont, QFontMetrics, QGuiApplication, QPainter, QPainterPath, QPen
 from PyQt5.QtWidgets import QWidget
 
@@ -10,7 +12,7 @@ from overlay_constants import (
     SELECTION_INSTRUCTION_TEXT,
     SELECTION_TEXT_FONT_SIZE,
 )
-from overlay_utils import _set_window_excluded_from_capture
+from overlay_utils import _configure_macos_overlay_window, _set_window_excluded_from_capture
 
 
 class RegionSelectionOverlay(QWidget):
@@ -37,10 +39,11 @@ class RegionSelectionOverlay(QWidget):
 
     def showEvent(self, event):
         super().showEvent(event)
-        self.raise_()
-        self.activateWindow()
         self.grabKeyboard()
         _set_window_excluded_from_capture(self)
+        if sys.platform == "darwin":
+            _configure_macos_overlay_window(self)
+            QTimer.singleShot(150, lambda: _configure_macos_overlay_window(self))
 
     def closeEvent(self, event):
         self.releaseKeyboard()
@@ -178,3 +181,8 @@ class HighlightOverlay(QWidget):
         painter.setBrush(Qt.NoBrush)
         rect = self.rect().adjusted(0, 0, -HIGHLIGHT_BORDER_WIDTH, -HIGHLIGHT_BORDER_WIDTH)
         painter.drawRect(rect)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if sys.platform == "darwin":
+            _configure_macos_overlay_window(self)

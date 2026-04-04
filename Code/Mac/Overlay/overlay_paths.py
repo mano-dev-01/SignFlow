@@ -11,6 +11,7 @@ def _is_frozen() -> bool:
 
 
 def get_resource_dir() -> Path:
+    """Get the base resource directory, with special handling for macOS bundles and frozen apps."""
     if _is_frozen():
         base = getattr(sys, "_MEIPASS", None)
         if base:
@@ -26,6 +27,14 @@ def get_resource_dir() -> Path:
         if internal.exists():
             return internal
         return exe_dir
+    
+    # For macOS, check if we're in a standard layout
+    if sys.platform == "darwin":
+        # Check for standalone app structure
+        current_dir = Path(__file__).resolve().parent
+        if (current_dir / "default_settings.json").exists():
+            return current_dir
+    
     return Path(__file__).resolve().parent
 
 

@@ -335,7 +335,7 @@
                 {% if session.get('user') %}
                 <div class="login-header" style="text-align: center; padding: 40px;">
                     <h2>Welcome, {{ session['user'].get('name', 'User') }}!</h2>
-                    <p>You are securely signed in via Google.</p>
+                    <p>Your session is active.</p>
                     <br>
                     <a href="{{ url_for('logout') }}" class="btn btn-secondary">Sign Out</a>
                 </div>
@@ -361,19 +361,6 @@
 
                     <button type="submit" class="btn btn-primary btn-full">Sign In</button>
                 </form>
-
-                <div class="login-divider">
-                    <span>or</span>
-                </div>
-
-                <div class="social-login">
-                    <a class="btn btn-social" href="{{ url_for('auth_github') }}">
-                        <span>Sign in with GitHub</span>
-                    </a>
-                    <a class="btn btn-social" href="{{ url_for('auth_google') }}">
-                        <span>Sign in with Google</span>
-                    </a>
-                </div>
 
                 <div class="login-footer">
                     <p>Don't have an account? <a href="{{ url_for('contact') }}">Sign up here</a></p>

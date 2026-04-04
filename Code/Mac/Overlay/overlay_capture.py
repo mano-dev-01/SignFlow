@@ -1,4 +1,5 @@
 import time
+import sys
 
 import cv2
 import mss
@@ -17,31 +18,78 @@ class ScreenCaptureThread(QThread):
 
     def run(self):
         if not self._region:
+            print("[ScreenCaptureThread] ERROR: No region defined")
             return
-        monitor = {
-            "left": int(self._region["x"]),
-            "top": int(self._region["y"]),
-            "width": int(self._region["width"]),
-            "height": int(self._region["height"]),
-        }
+        
+        # Validate region has required keys
+        required_keys = {"x", "y", "width", "height"}
+        if not all(key in self._region for key in required_keys):
+            print(f"[ScreenCaptureThread] ERROR: Invalid region dict: {self._region}")
+            return
+        
+        # macOS-specific screen capture setup
+        if sys.platform == "darwin":
+            # Ensure region coordinates are valid
+            x = int(self._region["x"])
+            y = int(self._region["y"])
+            width = int(self._region["width"])
+            height = int(self._region["height"])
+            
+            # Validate dimensions
+            if width <= 0 or height <= 0:
+                print(f"[ScreenCaptureThread] ERROR: Invalid dimensions: {width}x{height}")
+                return
+            
+            monitor = {
+                "left": x,
+                "top": y,
+                "width": width,
+                "height": height,
+            }
+            print(f"[ScreenCaptureThread] macOS screen capture: x={x}, y={y}, w={width}, h={height}")
+        else:
+            monitor = {
+                "left": int(self._region["x"]),
+                "top": int(self._region["y"]),
+                "width": int(self._region["width"]),
+                "height": int(self._region["height"]),
+            }
+        
         frame_interval = 1.0 / float(CAPTURE_FPS)
-        with mss.mss() as sct:
-            next_frame_time = time.perf_counter()
-            while self._running:
-                screenshot = sct.grab(monitor)
-                self.frame_captured.emit(
-                    {
-                        "rgb": screenshot.rgb,
-                        "width": screenshot.width,
-                        "height": screenshot.height,
-                    }
-                )
-                next_frame_time += frame_interval
-                sleep_for = next_frame_time - time.perf_counter()
-                if sleep_for > 0:
-                    time.sleep(sleep_for)
-                else:
-                    next_frame_time = time.perf_counter()
+        frame_count = 0
+        try:
+            with mss.mss() as sct:
+                next_frame_time = time.perf_counter()
+                while self._running:
+                    try:
+                        screenshot = sct.grab(monitor)
+                        if screenshot is None:
+                            print("[ScreenCaptureThread] ERROR: sct.grab() returned None")
+                            time.sleep(0.1)
+                            continue
+                        
+                        self.frame_captured.emit(
+                            {
+                                "rgb": screenshot.rgb,
+                                "width": screenshot.width,
+                                "height": screenshot.height,
+                            }
+                        )
+                        frame_count += 1
+                        if frame_count % 100 == 0:
+                            print(f"[ScreenCaptureThread] Captured {frame_count} frames")
+                        
+                        next_frame_time += frame_interval
+                        sleep_for = next_frame_time - time.perf_counter()
+                        if sleep_for > 0:
+                            time.sleep(sleep_for)
+                        else:
+                            next_frame_time = time.perf_counter()
+                    except Exception as e:
+                        print(f"[ScreenCaptureThread] Error capturing frame: {e}")
+                        time.sleep(0.1)
+        except Exception as e:
+            print(f"[ScreenCaptureThread] Fatal error: {e}")
 
     def stop(self):
         self._running = False

@@ -3,6 +3,7 @@ import random
 import sys
 import warnings
 
+
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QFontMetrics
 from PyQt5.QtWidgets import QApplication
@@ -16,6 +17,10 @@ from overlay_constants import (
     PRIMARY_INNER_SPACING,
 )
 from overlay_preferences import ensure_preferences_files
+from overlay_utils import (
+    configure_macos_app,
+    _configure_macos_overlay_window,
+)
 from overlay_window import OverlayWindow
 
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
@@ -144,6 +149,8 @@ class CaptionSimulator:
 def main():
     defaults, preferences = ensure_preferences_files()
 
+    configure_macos_app()
+
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(True)
 
@@ -154,7 +161,15 @@ def main():
         enable_logging=ENABLE_LOGGING,
     )
     overlay.show()
-    overlay.raise_()
+
+    from PyQt5.QtCore import QTimer
+
+    def apply_overlay_config():
+        _configure_macos_overlay_window(overlay)
+
+    # Prime native policy shortly after the window is shown.
+    QTimer.singleShot(100, apply_overlay_config)
+    QTimer.singleShot(300, apply_overlay_config)
 
     if DEBUG_CAPTIONS:
         overlay._caption_simulator = CaptionSimulator(overlay)

@@ -8,11 +8,10 @@ def view_users():
             return
         
         print("\n" + "="*80)
-        print(f"{'ID':<4} | {'Name':<20} | {'Email':<30} | {'Last Login'}")
+        print(f"{'ID':<4} | {'Name':<30} | {'Email'}")
         print("-" * 80)
         for user in users:
-            login_str = user.last_login.strftime('%Y-%m-%d %H:%M:%S') if user.last_login else "N/A"
-            print(f"{user.id:<4} | {str(user.name):<20} | {user.email:<30} | {login_str}")
+            print(f"{user.id:<4} | {str(user.name):<30} | {user.email}")
         print("="*80 + "\n")
 
 if __name__ == "__main__":
