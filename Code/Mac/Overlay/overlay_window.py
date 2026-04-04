@@ -137,14 +137,8 @@ class OverlayWindow(QWidget):
         self.debug_captions = bool(debug_captions)
         self.caption_text = LABEL_DEFAULT_TEXT
         self._caption_mode = "init"
-        # macOS overlay stability fix
-        if sys.platform == "darwin":
-            self._macos_fix_timer = QTimer(self)
-            self._macos_fix_timer.setInterval(1200)
-            self._macos_fix_timer.timeout.connect(self._reapply_macos_config)
-            self._macos_fix_timer.start()
-        else:
-            self._macos_fix_timer = None
+        # Native overlay policy is now owned by macos_overlay_controller.
+        self._macos_fix_timer = None
         self._has_prediction = False
         self._caption_history_text = ""
         self._last_caption_display = ""
@@ -270,11 +264,20 @@ class OverlayWindow(QWidget):
     def showEvent(self, event):
         super().showEvent(event)
         _set_window_excluded_from_capture(self)
-
-        QTimer.singleShot(0, lambda: _configure_macos_overlay_window(self))
-        QTimer.singleShot(300, lambda: _configure_macos_overlay_window(self))
+        if sys.platform == "darwin":
+            _configure_macos_overlay_window(self)
+            QTimer.singleShot(150, lambda: _configure_macos_overlay_window(self))
 
     def _reapply_macos_config(self):
+        if sys.platform == "darwin" and self.isVisible():
+            _configure_macos_overlay_window(self)
+
+    def _setup_space_change_observer(self):
+        # Centralized observer management now lives in macos_overlay_controller.
+        if sys.platform == "darwin":
+            _configure_macos_overlay_window(self)
+
+    def _on_space_changed(self, notification):
         if sys.platform == "darwin" and self.isVisible():
             _configure_macos_overlay_window(self)
 

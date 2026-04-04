@@ -1,8 +1,9 @@
+from __future__ import annotations
+
+import ctypes
 import os
 import random
 import sys
-import ctypes
-import ctypes.util
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage
@@ -88,105 +89,65 @@ def _set_window_excluded_from_capture(widget):
         pass
 
 
+def _guess_overlay_role(widget) -> str:
+    name = type(widget).__name__.lower()
+    if "preview" in name:
+        return "preview"
+    if "selection" in name or "highlight" in name:
+        return "selection"
+    return "overlay"
+
+
+def _get_macos_controller():
+    if sys.platform != "darwin":
+        return None
+    try:
+        from macos_overlay_controller import get_macos_overlay_controller
+
+        return get_macos_overlay_controller()
+    except Exception as exc:
+        print(f"[overlay_utils] macOS controller unavailable: {exc}")
+        return None
+
+
 # ---------------- MACOS ----------------
 def configure_macos_app():
-    """Run once at app startup - BEFORE QApplication is created"""
-    if sys.platform != "darwin":
-        return
-
-    try:
-        import objc
-        from AppKit import NSApplication, NSApplicationActivationPolicyAccessory
-
-        app = NSApplication.sharedApplication()
-        app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
-    except Exception as e:
-        print("App policy error:", e)
+    controller = _get_macos_controller()
+    if controller is not None:
+        controller.configure_app_policy()
 
 
 def configure_macos_overlay(widget):
-    """Configure Qt window as non-intrusive macOS overlay"""
-    if sys.platform != "darwin":
-        return
+    controller = _get_macos_controller()
+    if controller is not None:
+        controller.register_window(widget, role=_guess_overlay_role(widget))
 
-    try:
-        import objc
-        from AppKit import (
-            NSFloatingWindowLevel,
-            NSWindowStyleMaskNonactivatingPanel,
-            NSWindowCollectionBehaviorCanJoinAllSpaces,
-            NSWindowCollectionBehaviorFullScreenAuxiliary,
-            NSWindowCollectionBehaviorMoveToActiveSpace,
-            NSWindowCollectionBehaviorTransient,
-        )
 
-        ns_view = objc.objc_object(c_void_p=int(widget.winId()))
-        ns_window = ns_view.window()
+def configure_macos_overlay_v2(widget):
+    configure_macos_overlay(widget)
 
-        if ns_window is None:
-            return
 
-        # --- STYLE ---
-        style = int(ns_window.styleMask())
-        style |= int(NSWindowStyleMaskNonactivatingPanel)
-        ns_window.setStyleMask_(style)
-
-        # --- BEHAVIOR ---
-        ns_window.setFloatingPanel_(True)
-        ns_window.setBecomesKeyOnlyIfNeeded_(False)
-        ns_window.setWorksWhenModal_(True)
-
-        # --- SPACES - Use all available behaviors ---
-        behavior = (
-            int(NSWindowCollectionBehaviorCanJoinAllSpaces) |
-            int(NSWindowCollectionBehaviorFullScreenAuxiliary) |
-            int(NSWindowCollectionBehaviorTransient) |
-            int(NSWindowCollectionBehaviorMoveToActiveSpace)
-        )
-        ns_window.setCollectionBehavior_(behavior)
-
-        # Force to ALL spaces using private API if available
-        try:
-            ns_window.setValue_forKey_(True, "collectionBehaviorCanJoinAllSpaces")
-        except Exception:
-            pass
-
-        # Try to set on all spaces directly
-        if hasattr(ns_window, "setIsOnAllSpaces_"):
-            ns_window.setIsOnAllSpaces_(True)
-
-        # --- LEVEL ---
-        ns_window.setLevel_(int(NSFloatingWindowLevel))
-
-        # 🔥 IMPORTANT FIX
-        ns_window.setHidesOnDeactivate_(False)
-
-        # Keep overlay out of normal app window cycling
-        if hasattr(ns_window, "setIgnoresCycle_"):
-            ns_window.setIgnoresCycle_(True)
-        if hasattr(ns_window, "setReleasedWhenClosed_"):
-            ns_window.setReleasedWhenClosed_(False)
-
-        # --- NO FOCUS ---
-        if hasattr(ns_window, "setCanBecomeKeyWindow_"):
-            ns_window.setCanBecomeKeyWindow_(False)
-        if hasattr(ns_window, "setCanBecomeMainWindow_"):
-            ns_window.setCanBecomeMainWindow_(False)
-
-        # --- MOUSE PASSTHROUGH ---
-        ignores_mouse = widget.testAttribute(Qt.WA_TransparentForMouseEvents)
-        ns_window.setIgnoresMouseEvents_(bool(ignores_mouse))
-
-        # --- SHOW SAFELY ---
-        ns_window.orderFront_(None)
-
-        # Final push to all spaces
-        ns_window.setCollectionBehavior_(behavior)
-
-    except Exception as e:
-        print("Overlay config error:", e)
+def configure_macos_overlay_refresh(widget):
+    controller = _get_macos_controller()
+    if controller is not None:
+        controller.refresh_window(widget)
 
 
 def _configure_macos_overlay_window(widget):
-    """Compatibility wrapper used by overlay window modules."""
-    configure_macos_overlay(widget)
+    controller = _get_macos_controller()
+    if controller is None:
+        return
+    controller.register_window(widget, role=_guess_overlay_role(widget))
+    controller.refresh_window(widget)
+
+
+def configure_macos_overlay_final(widget):
+    _configure_macos_overlay_window(widget)
+
+
+def configure_macos_overlay_ultra(widget):
+    _configure_macos_overlay_window(widget)
+
+
+def configure_macos_overlay_with_notifications(widget):
+    _configure_macos_overlay_window(widget)

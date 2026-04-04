@@ -21,8 +21,14 @@ from overlay_utils import _configure_macos_overlay_window, _set_window_excluded_
 class PreviewWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
+        self.setWindowFlags(
+            Qt.FramelessWindowHint
+            | Qt.WindowStaysOnTopHint
+            | Qt.Tool
+            | Qt.WindowDoesNotAcceptFocus
+        )
         self.setAttribute(Qt.WA_TranslucentBackground, False)
+        self.setAttribute(Qt.WA_ShowWithoutActivating, True)
 
         self._status_visible = False
         self._capture_state = "IDLE"
@@ -267,8 +273,8 @@ class PreviewWindow(QWidget):
         self._position_near_corner()
         _set_window_excluded_from_capture(self)
         if sys.platform == "darwin":
-            QTimer.singleShot(0, lambda: _configure_macos_overlay_window(self))
-            QTimer.singleShot(300, lambda: _configure_macos_overlay_window(self))
+            _configure_macos_overlay_window(self)
+            QTimer.singleShot(150, lambda: _configure_macos_overlay_window(self))
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

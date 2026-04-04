@@ -17,7 +17,10 @@ from overlay_constants import (
     PRIMARY_INNER_SPACING,
 )
 from overlay_preferences import ensure_preferences_files
-from overlay_utils import configure_macos_app, configure_macos_overlay
+from overlay_utils import (
+    configure_macos_app,
+    _configure_macos_overlay_window,
+)
 from overlay_window import OverlayWindow
 
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
@@ -160,8 +163,13 @@ def main():
     overlay.show()
 
     from PyQt5.QtCore import QTimer
-    QTimer.singleShot(500, lambda: configure_macos_overlay(overlay))
-    QTimer.singleShot(1500, lambda: configure_macos_overlay(overlay))
+
+    def apply_overlay_config():
+        _configure_macos_overlay_window(overlay)
+
+    # Prime native policy shortly after the window is shown.
+    QTimer.singleShot(100, apply_overlay_config)
+    QTimer.singleShot(300, apply_overlay_config)
 
     if DEBUG_CAPTIONS:
         overlay._caption_simulator = CaptionSimulator(overlay)

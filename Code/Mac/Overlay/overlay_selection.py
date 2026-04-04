@@ -42,8 +42,8 @@ class RegionSelectionOverlay(QWidget):
         self.grabKeyboard()
         _set_window_excluded_from_capture(self)
         if sys.platform == "darwin":
-            QTimer.singleShot(0, lambda: _configure_macos_overlay_window(self))
-            QTimer.singleShot(300, lambda: _configure_macos_overlay_window(self))
+            _configure_macos_overlay_window(self)
+            QTimer.singleShot(150, lambda: _configure_macos_overlay_window(self))
 
     def closeEvent(self, event):
         self.releaseKeyboard()
@@ -181,3 +181,8 @@ class HighlightOverlay(QWidget):
         painter.setBrush(Qt.NoBrush)
         rect = self.rect().adjusted(0, 0, -HIGHLIGHT_BORDER_WIDTH, -HIGHLIGHT_BORDER_WIDTH)
         painter.drawRect(rect)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if sys.platform == "darwin":
+            _configure_macos_overlay_window(self)
