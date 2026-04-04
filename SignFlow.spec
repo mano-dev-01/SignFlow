@@ -1,16 +1,82 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_submodules
+from PyInstaller.utils.hooks import collect_all, collect_dynamic_libs
+import os
 
-hiddenimports = []
-hiddenimports += collect_submodules('signflow_overlay')
-hiddenimports += collect_submodules('Model_inference')
+# ============================================
+# DATA & MODELS
+# ============================================
+
+datas = [
+    ('Code/Mac/Model_inference', 'Model_inference'),
+    ('Code/Mac/Models', 'Models'),
+    ('Code/Common/Overlay/default_settings.json', '.'),
+    ('Code/Mac/version.py', '.'),  # Version file
+]
+
+# ============================================
+# BINARIES
+# ============================================
+
+binaries = []
+
+# Collect MediaPipe binaries
+tmp_ret = collect_all('mediapipe')
+datas += tmp_ret[0]
+binaries += tmp_ret[1]
+
+# ============================================
+# HIDDEN IMPORTS
+# ============================================
+
+hiddenimports = [
+    # Core computer vision & ML
+    'cv2',
+    'mediapipe',
+    'torch',
+    'torch.utils.data',
+    'torch.nn',
+    'torch.optim',
+    
+    # Audio
+    'sounddevice',
+    'sounddevice._sounddevice',
+    
+    # Screen capture (Quartz)
+    'Quartz',
+    'Quartz.CoreGraphics',
+    'AppKit',
+    'Foundation',
+    'objc',
+    
+    # Update system
+    'requests',
+    'requests.adapters',
+    'requests.packages',
+    'packaging',
+    'packaging.version',
+    'packaging.tags',
+    'packaging.specifiers',
+    
+    # Utilities
+    'joblib',
+    'sklearn',
+    'numpy',
+    'mss',
+    'flask',
+    'flask_cors',
+    'webbrowser',
+]
+
+# Collect all mediapipe sub-modules
+tmp_ret = collect_all('mediapipe')
+hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
-    ['Code/Mac/Overlay/overlay_remote.py'],
-    pathex=['Code/Mac/Overlay', 'Code/Mac'],
-    binaries=[],
-    datas=[('Code/Mac/Overlay/default_settings.json', '.'), ('Code/Mac/Model_inference', 'Model_inference'), ('Code/Mac/Models', 'Models')],
+    ['Code/Mac/Overlay/overlay.py'],
+    pathex=[],
+    binaries=binaries,
+    datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
@@ -51,5 +117,5 @@ app = BUNDLE(
     coll,
     name='SignFlow.app',
     icon=None,
-    bundle_identifier='com.signflow.overlay',
+    bundle_identifier=None,
 )

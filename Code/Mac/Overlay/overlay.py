@@ -3,6 +3,9 @@ import random
 import sys
 import warnings
 
+# Suppress TensorFlow and logging noise at startup
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
+os.environ.setdefault("GLOG_minloglevel", "2")
 
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QFontMetrics
@@ -23,8 +26,6 @@ from overlay_utils import (
 )
 from overlay_window import OverlayWindow
 
-os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
-os.environ.setdefault("GLOG_minloglevel", "2")
 warnings.filterwarnings(
     "ignore",
     message=r"SymbolDatabase\\.GetPrototype\\(\\) is deprecated.*",
