@@ -9,7 +9,7 @@ from PyQt5.QtCore import (
     QTimer,
     QVariantAnimation,
 )
-from PyQt5.QtGui import QGuiApplication, QRegion
+from PyQt5.QtGui import QCursor, QGuiApplication, QRegion
 from PyQt5.QtWidgets import QApplication, QVBoxLayout, QWidget, QFileDialog, QFrame, QLabel, QHBoxLayout
 
 from overlay_capture import ScreenCaptureThread, WebcamCaptureThread
@@ -97,6 +97,7 @@ from overlay_preferences import _read_json, _sanitize_settings, save_user_prefer
 from overlay_preview import PreviewWindow
 from overlay_selection import HighlightOverlay, RegionSelectionOverlay
 from overlay_utils import (
+    _configure_macos_overlay_window,
     _frame_to_qimage,
     _set_window_excluded_from_capture,
     process_frame,
@@ -120,7 +121,8 @@ class OverlayWindow(QWidget):
                 Qt.Window | Qt.FramelessWindowHint | 
                 Qt.WindowStaysOnTopHint |  # Keep overlay visible on top
                 Qt.NoDropShadowWindowHint |
-                Qt.Tool  # Tool window for better integration
+                Qt.Tool |  # Tool window for better integration
+                Qt.WindowDoesNotAcceptFocus
             )
             
             # Make overlay non-intrusive - don't steal focus from other apps
@@ -267,6 +269,7 @@ class OverlayWindow(QWidget):
     def showEvent(self, event):
         super().showEvent(event)
         _set_window_excluded_from_capture(self)
+        _configure_macos_overlay_window(self)
 
     def focusOutEvent(self, event):
         """macOS: Keep overlay visible when it loses focus to Chrome."""
@@ -345,7 +348,7 @@ class OverlayWindow(QWidget):
             self.root_layout.addStretch(1)
 
     def _screen_geometry(self):
-        screen = QGuiApplication.primaryScreen()
+        screen = QGuiApplication.screenAt(QCursor.pos()) or QGuiApplication.primaryScreen()
         if screen is None:
             return None
         return screen.availableGeometry()
@@ -429,6 +432,7 @@ class OverlayWindow(QWidget):
     def _ensure_on_top(self):
         """macOS: Ensure overlay stays visible on top without stealing focus."""
         if sys.platform == "darwin" and self.isVisible():
+            _configure_macos_overlay_window(self)
             # Raise the window to front WITHOUT stealing focus
             self.raise_()
             # Don't call activateWindow() - that would steal focus from Chrome

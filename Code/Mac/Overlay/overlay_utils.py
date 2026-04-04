@@ -1,6 +1,8 @@
 import os
 import random
 import sys
+import ctypes
+import ctypes.util
 
 from PyQt5.QtGui import QImage
 
@@ -72,4 +74,67 @@ def _set_window_excluded_from_capture(widget):
         affinity = 0x11 if EXCLUDE_OVERLAY_FROM_CAPTURE else 0x00
         ctypes.windll.user32.SetWindowDisplayAffinity(hwnd, affinity)
     except Exception:
+        pass
+
+
+def _configure_macos_overlay_window(widget):
+    """Configure NSWindow to keep overlay visible across Spaces and full-screen apps."""
+    if sys.platform != "darwin":
+        return
+
+    try:
+        objc_path = ctypes.util.find_library("objc")
+        if not objc_path:
+            return
+
+        objc = ctypes.cdll.LoadLibrary(objc_path)
+
+        objc.sel_registerName.restype = ctypes.c_void_p
+        objc.sel_registerName.argtypes = [ctypes.c_char_p]
+
+        msg_send_addr = ctypes.cast(objc.objc_msgSend, ctypes.c_void_p).value
+        if not msg_send_addr:
+            return
+
+        msg_ptr = ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p)(msg_send_addr)
+        msg_uint = ctypes.CFUNCTYPE(ctypes.c_ulonglong, ctypes.c_void_p, ctypes.c_void_p)(msg_send_addr)
+        msg_set_uint = ctypes.CFUNCTYPE(
+            None,
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.c_ulonglong,
+        )(msg_send_addr)
+        msg_set_int = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_long)(msg_send_addr)
+        msg_set_bool = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_bool)(msg_send_addr)
+
+        def _sel(name: str):
+            return objc.sel_registerName(name.encode("utf-8"))
+
+        def _msg_ptr(target, selector):
+            return msg_ptr(ctypes.c_void_p(target), selector)
+
+        ns_view = int(widget.winId())
+        if not ns_view:
+            return
+
+        ns_window = _msg_ptr(ns_view, _sel("window"))
+        if not ns_window:
+            return
+
+        # NSWindowCollectionBehaviorCanJoinAllSpaces | NSWindowCollectionBehaviorFullScreenAuxiliary
+        join_all_spaces_and_fullscreen_aux = (1 << 0) | (1 << 8)
+        existing_behavior = msg_uint(ctypes.c_void_p(ns_window), _sel("collectionBehavior"))
+        msg_set_uint(
+            ctypes.c_void_p(ns_window),
+            _sel("setCollectionBehavior:"),
+            existing_behavior | join_all_spaces_and_fullscreen_aux,
+        )
+
+        # Keep it visible when app focus changes.
+        msg_set_bool(ctypes.c_void_p(ns_window), _sel("setHidesOnDeactivate:"), False)
+
+        # Floating level is sufficient with Qt's WindowStaysOnTopHint.
+        msg_set_int(ctypes.c_void_p(ns_window), _sel("setLevel:"), 3)
+    except Exception:
+        # Best-effort only: keep overlay functional even if native calls are unavailable.
         pass
