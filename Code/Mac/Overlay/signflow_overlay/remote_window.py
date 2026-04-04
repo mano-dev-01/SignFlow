@@ -21,7 +21,7 @@ class RemoteOverlayWindow(OverlayWindow):
         print("[OVERLAY_REMOTE] Creating RemoteHandTrackingWorker...")
         return RemoteHandTrackingWorker(
             server_url=self._remote_server_url,
-            flip_horizontal=self.flip_input,
+            flip_horizontal=self._should_flip_input(),
             primary_hand_only=self.primary_hand_only,
         )
 

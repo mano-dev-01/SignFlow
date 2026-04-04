@@ -154,7 +154,6 @@ def main():
         enable_logging=ENABLE_LOGGING,
     )
     overlay.show()
-    overlay.raise_()
 
     if DEBUG_CAPTIONS:
         overlay._caption_simulator = CaptionSimulator(overlay)

@@ -20,6 +20,7 @@ flask-cors>=4.0.0
 pyaudio-portaudio>=0.0.7
 
 # For better macOS native integration (optional but recommended)
+pyobjc-framework-Cocoa>=9.0
 # py-applescript  # For future macOS automation support
 
 # Development/Testing (optional)

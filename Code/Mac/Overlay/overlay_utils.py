@@ -4,6 +4,7 @@ import sys
 import ctypes
 import ctypes.util
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage
 
 from overlay_constants import EXCLUDE_OVERLAY_FROM_CAPTURE
@@ -78,63 +79,75 @@ def _set_window_excluded_from_capture(widget):
 
 
 def _configure_macos_overlay_window(widget):
-    """Configure NSWindow to keep overlay visible across Spaces and full-screen apps."""
+    """Configure Qt window as non-activating floating overlay on macOS.
+
+    Modifies the existing NSWindow to behave like a non-activating NSPanel:
+    - Adds NSWindowStyleMaskNonactivatingPanel style
+    - Sets floating panel behaviors
+    - Prevents focus stealing
+    - Keeps visible across spaces and apps
+    """
     if sys.platform != "darwin":
         return
 
     try:
-        objc_path = ctypes.util.find_library("objc")
-        if not objc_path:
-            return
-
-        objc = ctypes.cdll.LoadLibrary(objc_path)
-
-        objc.sel_registerName.restype = ctypes.c_void_p
-        objc.sel_registerName.argtypes = [ctypes.c_char_p]
-
-        msg_send_addr = ctypes.cast(objc.objc_msgSend, ctypes.c_void_p).value
-        if not msg_send_addr:
-            return
-
-        msg_ptr = ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p)(msg_send_addr)
-        msg_uint = ctypes.CFUNCTYPE(ctypes.c_ulonglong, ctypes.c_void_p, ctypes.c_void_p)(msg_send_addr)
-        msg_set_uint = ctypes.CFUNCTYPE(
-            None,
-            ctypes.c_void_p,
-            ctypes.c_void_p,
-            ctypes.c_ulonglong,
-        )(msg_send_addr)
-        msg_set_int = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_long)(msg_send_addr)
-        msg_set_bool = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_bool)(msg_send_addr)
-
-        def _sel(name: str):
-            return objc.sel_registerName(name.encode("utf-8"))
-
-        def _msg_ptr(target, selector):
-            return msg_ptr(ctypes.c_void_p(target), selector)
-
-        ns_view = int(widget.winId())
-        if not ns_view:
-            return
-
-        ns_window = _msg_ptr(ns_view, _sel("window"))
-        if not ns_window:
-            return
-
-        # NSWindowCollectionBehaviorCanJoinAllSpaces | NSWindowCollectionBehaviorFullScreenAuxiliary
-        join_all_spaces_and_fullscreen_aux = (1 << 0) | (1 << 8)
-        existing_behavior = msg_uint(ctypes.c_void_p(ns_window), _sel("collectionBehavior"))
-        msg_set_uint(
-            ctypes.c_void_p(ns_window),
-            _sel("setCollectionBehavior:"),
-            existing_behavior | join_all_spaces_and_fullscreen_aux,
+        import objc
+        from AppKit import (
+            NSFloatingWindowLevel,
+            NSWindowStyleMaskNonactivatingPanel,
+            NSWindowCollectionBehaviorCanJoinAllSpaces,
+            NSWindowCollectionBehaviorFullScreenAuxiliary,
         )
 
-        # Keep it visible when app focus changes.
-        msg_set_bool(ctypes.c_void_p(ns_window), _sel("setHidesOnDeactivate:"), False)
+        ns_view_ptr = int(widget.winId())
+        if not ns_view_ptr:
+            return
 
-        # Floating level is sufficient with Qt's WindowStaysOnTopHint.
-        msg_set_int(ctypes.c_void_p(ns_window), _sel("setLevel:"), 3)
+        ns_view = objc.objc_object(c_void_p=ns_view_ptr)
+        ns_window = ns_view.window()
+        if ns_window is None:
+            return
+
+        # Convert NSWindow -> NSPanel so macOS treats it as a persistent floating panel.
+        panel_class = objc.lookUpClass("NSPanel")
+        if not ns_window.isKindOfClass_(panel_class):
+            libobjc_path = ctypes.util.find_library("objc")
+            if libobjc_path:
+                libobjc = ctypes.cdll.LoadLibrary(libobjc_path)
+                object_set_class = libobjc.object_setClass
+                object_set_class.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+                object_set_class.restype = ctypes.c_void_p
+                object_set_class(
+                    ctypes.c_void_p(objc.pyobjc_id(ns_window)),
+                    ctypes.c_void_p(objc.pyobjc_id(panel_class)),
+                )
+                ns_window = objc.objc_object(c_void_p=objc.pyobjc_id(ns_window))
+
+        current_style = int(ns_window.styleMask())
+        new_style = current_style | int(NSWindowStyleMaskNonactivatingPanel)
+        ns_window.setStyleMask_(new_style)
+
+        ns_window.setFloatingPanel_(True)
+        ns_window.setBecomesKeyOnlyIfNeeded_(False)
+        ns_window.setWorksWhenModal_(True)
+
+        behavior = int(ns_window.collectionBehavior())
+        behavior |= int(NSWindowCollectionBehaviorCanJoinAllSpaces)
+        behavior |= int(NSWindowCollectionBehaviorFullScreenAuxiliary)
+        ns_window.setCollectionBehavior_(behavior)
+
+        ns_window.setLevel_(int(NSFloatingWindowLevel))
+
+        ns_window.setHidesOnDeactivate_(False)
+
+        if hasattr(ns_window, "setCanBecomeKeyWindow_"):
+            ns_window.setCanBecomeKeyWindow_(False)
+        if hasattr(ns_window, "setCanBecomeMainWindow_"):
+            ns_window.setCanBecomeMainWindow_(False)
+
+        ignores_mouse = bool(widget.testAttribute(Qt.WA_TransparentForMouseEvents))
+        ns_window.setIgnoresMouseEvents_(ignores_mouse)
+
+        ns_window.orderFrontRegardless()
     except Exception:
-        # Best-effort only: keep overlay functional even if native calls are unavailable.
         pass

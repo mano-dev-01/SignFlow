@@ -1,6 +1,8 @@
 import time
 import sys
 
+import mss
+
 from PyQt5.QtCore import (
     QAbstractAnimation,
     QEasingCurve,
@@ -111,6 +113,7 @@ from overlay_voice import VoiceToTextWorker
 class OverlayWindow(QWidget):
     def __init__(self, defaults, preferences, debug_captions: bool = False, enable_logging: bool = False):
         super().__init__()
+        self.overlay_click_through = False
         
         # macOS-specific window setup
         if sys.platform == "darwin":
@@ -121,23 +124,13 @@ class OverlayWindow(QWidget):
                 Qt.Window | Qt.FramelessWindowHint | 
                 Qt.WindowStaysOnTopHint |  # Keep overlay visible on top
                 Qt.NoDropShadowWindowHint |
-                Qt.Tool |  # Tool window for better integration
                 Qt.WindowDoesNotAcceptFocus
             )
             
             # Make overlay non-intrusive - don't steal focus from other apps
             self.setAttribute(Qt.WA_ShowWithoutActivating, True)  # Don't activate on show
             self.setFocusPolicy(Qt.NoFocus)  # Don't accept keyboard focus
-            
-            print("[OverlayWindow] macOS overlay configuration applied")
-            print("[OverlayWindow] ⓘ Overlay stays visible while Chrome remains usable")
-            
-            # Add timer to ensure window stays on top when switching apps
-            self._stay_on_top_timer = QTimer(self)
-            self._stay_on_top_timer.timeout.connect(self._ensure_on_top)
-            self._stay_on_top_timer.start(1000)  # Check every 1 second
-        else:
-            self._stay_on_top_timer = None
+            self.setAttribute(Qt.WA_TransparentForMouseEvents, self.overlay_click_through)
 
         self.defaults = defaults
         self.preferences = preferences
@@ -271,19 +264,11 @@ class OverlayWindow(QWidget):
         _set_window_excluded_from_capture(self)
         _configure_macos_overlay_window(self)
 
-    def focusOutEvent(self, event):
-        """macOS: Keep overlay visible when it loses focus to Chrome."""
-        super().focusOutEvent(event)
-        if sys.platform == "darwin":
-            # Re-raise to keep visible, but don't steal focus back
-            QTimer.singleShot(100, self._ensure_on_top)
-
-    def changeEvent(self, event):
-        """macOS: Keep overlay on top when switching to other apps."""
-        super().changeEvent(event)
-        if sys.platform == "darwin" and event.type() == 4:  # QEvent.WindowDeactivate
-            # Re-raise on deactivate to keep overlay visible on top
-            QTimer.singleShot(50, self._ensure_on_top)
+    def set_overlay_click_through(self, enabled: bool):
+        self.overlay_click_through = bool(enabled)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents, self.overlay_click_through)
+        if sys.platform == "darwin" and self.isVisible():
+            _configure_macos_overlay_window(self)
 
     def _write_preferences(self):
         self.preferences["caption_box_size"] = self.pending_caption_box_size
@@ -428,15 +413,6 @@ class OverlayWindow(QWidget):
             y = geo.y() + geo.height() - self.height() - OVERLAY_MARGIN
 
         self.move(x, y)
-
-    def _ensure_on_top(self):
-        """macOS: Ensure overlay stays visible on top without stealing focus."""
-        if sys.platform == "darwin" and self.isVisible():
-            _configure_macos_overlay_window(self)
-            # Raise the window to front WITHOUT stealing focus
-            self.raise_()
-            # Don't call activateWindow() - that would steal focus from Chrome
-            # Just raising() is enough to keep it on top
 
     def _refresh_window_geometry(self, reposition: bool):
         self.setFixedSize(OVERLAY_WIDTH + (OUTER_PADDING * 2), self._full_window_height())
@@ -669,8 +645,11 @@ class OverlayWindow(QWidget):
     def on_flip_input_toggled(self, checked: bool):
         self.flip_input = bool(checked)
         if self.hand_worker is not None:
-            self.hand_worker.set_flip_horizontal(self.flip_input)
+            self.hand_worker.set_flip_horizontal(self._should_flip_input())
         self._write_preferences()
+
+    def _should_flip_input(self) -> bool:
+        return bool(self.flip_input and self.capture_source == "webcam")
 
     def on_primary_hand_only_toggled(self, checked: bool):
         self.primary_hand_only = bool(checked)
@@ -823,7 +802,6 @@ class OverlayWindow(QWidget):
             self.selection_overlay.close()
             self.selection_overlay = None
         self.show()
-        self.raise_()
 
     def _show_highlight(self, rect: QRect):
         if self.highlight_overlay is not None:
@@ -838,7 +816,6 @@ class OverlayWindow(QWidget):
             self.highlight_overlay.close()
             self.highlight_overlay = None
         self.show()
-        self.raise_()
         self._start_capture()
 
     def _set_capture_state_from_rect(self, rect: QRect):
@@ -846,11 +823,11 @@ class OverlayWindow(QWidget):
             self._stop_capture_thread()
             self.secondary_panel.set_webcam_active(False)
         self.capture_source = "screen"
+        if self.hand_worker is not None:
+            self.hand_worker.set_flip_horizontal(self._should_flip_input())
         
-        # For macOS, handle Retina display scaling properly
+        # For macOS, convert Qt logical coordinates to capture pixel coordinates.
         if sys.platform == "darwin":
-            # On macOS, mss uses physical coordinates directly
-            # But Qt uses logical coordinates on Retina displays
             rect = self._rect_to_physical(rect)
             print(f"[DEBUG] macOS Retina scaling applied: {rect.x()}, {rect.y()}, {rect.width()}, {rect.height()}")
         
@@ -869,19 +846,85 @@ class OverlayWindow(QWidget):
         print(f"[DEBUG] Capture region set: {self.capture_state.get('region')}")
 
     def _rect_to_physical(self, rect: QRect):
-        screen = QGuiApplication.screenAt(rect.center())
-        if screen is None:
-            screen = QGuiApplication.primaryScreen()
+        # Primary path: map selected Qt screen geometry to the corresponding mss monitor,
+        # then convert local coordinates using that monitor's scale.
+        try:
+            qt_screen = QGuiApplication.screenAt(rect.center()) or QGuiApplication.primaryScreen()
+            if qt_screen is not None:
+                qt_geo = qt_screen.geometry()
+                if qt_geo.width() > 0 and qt_geo.height() > 0:
+                    with mss.mss() as sct:
+                        all_monitors = sct.monitors
+                    if all_monitors and len(all_monitors) > 1:
+                        virtual_mon = all_monitors[0]
+                        monitors = all_monitors[1:]
+
+                        virtual_screen = QGuiApplication.primaryScreen()
+                        virtual_geo = virtual_screen.virtualGeometry() if virtual_screen is not None else None
+                        if virtual_geo is not None and virtual_geo.width() > 0 and virtual_geo.height() > 0:
+                            global_sx = float(virtual_mon.get("width", 0)) / float(virtual_geo.width())
+                            global_sy = float(virtual_mon.get("height", 0)) / float(virtual_geo.height())
+                        else:
+                            global_sx = 0.0
+                            global_sy = 0.0
+
+                        # Estimate selected screen rectangle in physical desktop space.
+                        if global_sx > 0 and global_sy > 0:
+                            est_left = int(round(virtual_mon.get("left", 0) + (qt_geo.x() - virtual_geo.x()) * global_sx))
+                            est_top = int(round(virtual_mon.get("top", 0) + (qt_geo.y() - virtual_geo.y()) * global_sy))
+                            est_w = max(1, int(round(qt_geo.width() * global_sx)))
+                            est_h = max(1, int(round(qt_geo.height() * global_sy)))
+                        else:
+                            est_left = est_top = 0
+                            est_w = est_h = 0
+
+                        best_monitor = None
+                        best_overlap = -1
+                        for mon in monitors:
+                            ml = int(mon.get("left", 0) or 0)
+                            mt = int(mon.get("top", 0) or 0)
+                            mw = int(mon.get("width", 0) or 0)
+                            mh = int(mon.get("height", 0) or 0)
+                            if mw <= 0 or mh <= 0:
+                                continue
+
+                            if est_w > 0 and est_h > 0:
+                                ox = max(0, min(est_left + est_w, ml + mw) - max(est_left, ml))
+                                oy = max(0, min(est_top + est_h, mt + mh) - max(est_top, mt))
+                                overlap = ox * oy
+                            else:
+                                overlap = -1
+
+                            if overlap > best_overlap:
+                                best_overlap = overlap
+                                best_monitor = mon
+
+                        if best_monitor is not None:
+                            mw = float(best_monitor.get("width", 0) or 0)
+                            mh = float(best_monitor.get("height", 0) or 0)
+                            sx = mw / float(qt_geo.width()) if qt_geo.width() > 0 else 0.0
+                            sy = mh / float(qt_geo.height()) if qt_geo.height() > 0 else 0.0
+                            if sx > 0 and sy > 0:
+                                local_x = rect.x() - qt_geo.x()
+                                local_y = rect.y() - qt_geo.y()
+                                px = int(round(best_monitor.get("left", 0) + (local_x * sx)))
+                                py = int(round(best_monitor.get("top", 0) + (local_y * sy)))
+                                pw = max(1, int(round(rect.width() * sx)))
+                                ph = max(1, int(round(rect.height() * sy)))
+                                return QRect(px, py, pw, ph)
+        except Exception:
+            pass
+
+        # Fallback for environments where virtual monitor mapping is unavailable.
+        screen = QGuiApplication.screenAt(rect.center()) or QGuiApplication.primaryScreen()
         if screen is None:
             return rect
-        scale = screen.devicePixelRatio()
-        if scale <= 0:
-            return rect
+        scale = float(screen.devicePixelRatio() or 1.0)
         return QRect(
-            int(rect.x() * scale),
-            int(rect.y() * scale),
-            max(1, int(rect.width() * scale)),
-            max(1, int(rect.height() * scale)),
+            int(round(rect.x() * scale)),
+            int(round(rect.y() * scale)),
+            max(1, int(round(rect.width() * scale))),
+            max(1, int(round(rect.height() * scale))),
         )
 
     def _prediction_init_message(self) -> str:
@@ -889,7 +932,7 @@ class OverlayWindow(QWidget):
 
     def _create_hand_worker(self):
         worker = HandTrackingWorker(
-            flip_horizontal=self.flip_input,
+            flip_horizontal=self._should_flip_input(),
             primary_hand_only=self.primary_hand_only,
         )
         if self.model_source == "local" and self.local_model_file_path:
@@ -959,6 +1002,8 @@ class OverlayWindow(QWidget):
             self.capture_state["paused"] = False
             if not self.capture_state.get("region"):
                 self.capture_state["region"] = {"label": "Webcam"}
+        if self.hand_worker is not None:
+            self.hand_worker.set_flip_horizontal(self._should_flip_input())
         self._prepare_live_capture_ui()
         self._start_frame_thread(WebcamCaptureThread(), "webcam_thread")
         self._ensure_hand_worker()
@@ -992,7 +1037,6 @@ class OverlayWindow(QWidget):
         else:
             self.status_timer.stop()
         self.preview_window.show()
-        self.preview_window.raise_()
 
     def _on_frame_captured(self, frame):
         process_frame(frame)
@@ -1093,7 +1137,7 @@ class OverlayWindow(QWidget):
         image = _frame_to_qimage(frame)
         if image is None:
             return
-        if self.flip_input and not using_processed:
+        if self._should_flip_input() and not using_processed:
             image = image.mirrored(True, False)
         self.preview_window.update_frame(image)
 
