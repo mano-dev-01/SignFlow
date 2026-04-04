@@ -17,7 +17,10 @@ flask-cors>=4.0.0
 
 # macOS-specific additions
 # Audio support
-pyaudio-portaudio>=0.0.7
+# NOTE: `pyaudio-portaudio` is not reliably available on macOS via PyPI.
+# Install PortAudio with Homebrew, then install PyAudio in the venv:
+#   brew install portaudio
+#   pip install PyAudio
 
 # For better macOS native integration (optional but recommended)
 pyobjc-framework-Cocoa>=9.0
