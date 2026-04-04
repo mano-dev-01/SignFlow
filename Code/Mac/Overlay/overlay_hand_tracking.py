@@ -13,6 +13,18 @@ from PyQt5.QtCore import QThread, pyqtSignal
 
 from overlay_constants import SIGN_PREDICTION_MIN_CONFIDENCE
 
+# Debug logging to file
+_DEBUG_LOG_FILE = "/tmp/signflow_hand_tracking_debug.log"
+def _debug_log(message):
+    try:
+        with open(_DEBUG_LOG_FILE, "a") as f:
+            f.write(f"[{time.time():.2f}] {message}\n")
+            f.flush()
+    except:
+        pass
+
+_debug_log("=== overlay_hand_tracking module loaded ===")
+
 ROOT_DIR = Path(__file__).resolve().parents[2]
 MODEL_DIR = ROOT_DIR / "Model_inference"
 for path in [str(ROOT_DIR), str(MODEL_DIR)]:
@@ -35,6 +47,14 @@ def _safe_import(module_name: str):
     except Exception:  # pragma: no cover - allow runtime without optional deps
         return None
 
+# Import remote inference client
+try:
+    from remote_inference_client import get_remote_client
+    _remote_inference_available = True
+except Exception:
+    _remote_inference_available = False
+    _debug_log("WARNING: remote_inference_client not available")
+
 from overlay_constants import (
     DETECTION_MAX_DIM,
     DETECTION_MIN_DIM,
@@ -44,12 +64,15 @@ from overlay_constants import (
 
 
 class HandTracker:
-    def __init__(self, primary_hand_only: bool = True):
+    def __init__(self, primary_hand_only: bool = True, use_remote_model: bool = False, remote_endpoint: str = None):
         self.available = False
         self._primary_hand_only = bool(primary_hand_only)
         self._initialized = False
         self._model = None
         self._model_name = None
+        self._use_remote_model = bool(use_remote_model)
+        self._remote_client = None
+        self._remote_endpoint = remote_endpoint or "https://mano-dev-01-signflow-inference.hf.space"
         self.last_features = None
         self.last_left_features = None
         self.last_right_features = None
@@ -80,24 +103,63 @@ class HandTracker:
         self._joblib = _safe_import("joblib")
         self._cv2 = _safe_import("cv2")
         self._mp = _safe_import("mediapipe")
+        msg = f"HandTracker.initialize: joblib={self._joblib is not None}, cv2={self._cv2 is not None}, mediapipe={self._mp is not None}"
+        print(f"[{msg}]")
+        _debug_log(msg)
 
         if self._joblib is not None:
             self._load_model()
 
         if self._mp is None:
+            _debug_log("HandTracker.initialize: ERROR: mediapipe failed to import")
+            print("[HandTracker.initialize] ERROR: mediapipe failed to import")
             self.available = False
             return
 
-        self._mp_hands = self._mp.solutions.hands
-        self._mp_draw = self._mp.solutions.drawing_utils
+        try:
+            self._mp_hands = self._mp.solutions.hands
+            self._mp_draw = self._mp.solutions.drawing_utils
+            _debug_log("HandTracker.initialize: mediapipe.solutions loaded successfully")
+            print("[HandTracker.initialize] mediapipe.solutions loaded successfully")
+        except Exception as e:
+            msg = f"HandTracker.initialize: ERROR loading solutions: {e}"
+            _debug_log(msg)
+            print(f"[{msg}]")
+            self.available = False
+            return
+        
         try:
             from mediapipe.framework.formats import landmark_pb2
-        except Exception:
+        except Exception as e:
+            print(f"[HandTracker.initialize] WARNING: landmark_pb2 import failed: {e}")
             landmark_pb2 = None
         self._landmark_pb2 = landmark_pb2
         self._build_hands()
+        _debug_log(f"HandTracker.initialize: MediaPipe initialization complete. available={self.available}")
+        print(f"[HandTracker.initialize] MediaPipe initialization complete. available={self.available}")
 
     def _load_model(self):
+        self._model = None
+        self._model_name = None
+        
+        # Try remote inference first if enabled
+        if self._use_remote_model and _remote_inference_available:
+            try:
+                _debug_log(f"Loading remote model from {self._remote_endpoint}")
+                self._remote_client = get_remote_client(self._remote_endpoint)
+                if self._remote_client.available:
+                    self._model_name = f"Remote:{self._remote_endpoint}"
+                    self._model = self._remote_client
+                    _debug_log("✅ Remote model client initialized")
+                    return
+            except Exception as e:
+                _debug_log(f"Failed to initialize remote model: {e}")
+        
+        # Fallback to local model if available
+        if self._joblib is None:
+            return
+        
+        _debug_log("Falling back to local model")
         self._model = None
         self._model_name = None
 
@@ -152,10 +214,14 @@ class HandTracker:
 
     def _build_hands(self):
         if self._mp_hands is None:
+            _debug_log("HandTracker._build_hands: ERROR: _mp_hands is None")
+            print("[HandTracker._build_hands] ERROR: _mp_hands is None")
             self.available = False
             return
         max_hands = 1 if self._primary_hand_only else 2
         try:
+            _debug_log(f"HandTracker._build_hands: Creating Hands detector with max_hands={max_hands}")
+            print(f"[HandTracker._build_hands] Creating Hands detector with max_hands={max_hands}")
             self._hands = self._mp_hands.Hands(
                 static_image_mode=False,
                 max_num_hands=max_hands,
@@ -163,7 +229,14 @@ class HandTracker:
                 min_tracking_confidence=0.7,
             )
             self.available = True
-        except Exception:
+            _debug_log("HandTracker._build_hands: Hands detector created successfully. available=True")
+            print("[HandTracker._build_hands] Hands detector created successfully. available=True")
+        except Exception as e:
+            msg = f"HandTracker._build_hands: ERROR creating Hands detector: {e}"
+            _debug_log(msg)
+            print(f"[{msg}]")
+            import traceback
+            traceback.print_exc()
             self._hands = None
             self.available = False
 
@@ -190,6 +263,8 @@ class HandTracker:
 
     def process(self, frame: dict, flip_horizontal: bool = False):
         if not self.available or self._hands is None or frame is None:
+            if frame is not None and not self.available:
+                print(f"[HandTracker.process] Skipping: available={self.available}, has_hands={self._hands is not None}")
             return frame, self.last_status
 
         rgb = frame.get("rgb")
@@ -283,7 +358,17 @@ class HandTracker:
                 if self._primary_hand_only and idx > 0:
                     break
                 draw_landmarks(hand_landmarks)
-                features = build_hand_features(hand_landmarks.landmark)
+                
+                # Extract features if available
+                if build_hand_features is None:
+                    features = None
+                    _debug_log("WARNING: build_hand_features is None, skipping feature extraction")
+                else:
+                    try:
+                        features = build_hand_features(hand_landmarks.landmark)
+                    except Exception as e:
+                        _debug_log(f"ERROR extracting features: {e}")
+                        features = None
 
                 score = 0.0
                 hand_label = None
@@ -323,12 +408,31 @@ class HandTracker:
 
             if self._model is not None:
                 features = np.array(self.last_features, dtype=np.float32).reshape(1, -1)
-                probs = self._model.predict_proba(features)[0]
-                prediction_conf = float(np.max(probs))
-                if prediction_conf >= SIGN_PREDICTION_MIN_CONFIDENCE:
-                    prediction_text = self._model.predict(features)[0]
+                
+                # Handle remote model inference
+                if self._remote_client is not None and isinstance(self._model, type(self._remote_client)):
+                    try:
+                        _debug_log("Using remote model for prediction")
+                        prediction_text = self._model.predict(features)
+                        probs = self._model.predict_proba(features)[0]
+                        prediction_conf = float(np.max(probs)) if len(probs) > 0 else 0.0
+                    except Exception as e:
+                        _debug_log(f"Remote prediction failed: {e}")
+                        prediction_text = "Error"
+                        prediction_conf = 0.0
+                # Handle local model inference
                 else:
-                    prediction_text = "Uncertain"
+                    try:
+                        probs = self._model.predict_proba(features)[0]
+                        prediction_conf = float(np.max(probs))
+                        if prediction_conf >= SIGN_PREDICTION_MIN_CONFIDENCE:
+                            prediction_text = self._model.predict(features)[0]
+                        else:
+                            prediction_text = "Uncertain"
+                    except Exception as e:
+                        _debug_log(f"Local prediction failed: {e}")
+                        prediction_text = "Error"
+                        prediction_conf = 0.0
             else:
                 prediction_text = "No Model"
 
@@ -367,11 +471,13 @@ class HandTrackingWorker(QThread):
     fps_updated = pyqtSignal(float)
     prediction_updated = pyqtSignal(str)
 
-    def __init__(self, flip_horizontal: bool = False, primary_hand_only: bool = True):
+    def __init__(self, flip_horizontal: bool = False, primary_hand_only: bool = True, use_remote_model: bool = False, remote_endpoint: str = None):
         super().__init__()
         self._tracker = None
         self._flip_horizontal = bool(flip_horizontal)
         self._primary_hand_only = bool(primary_hand_only)
+        self._use_remote_model = bool(use_remote_model)
+        self._remote_endpoint = remote_endpoint or "https://mano-dev-01-signflow-inference.hf.space"
         self._pending_reconfigure = False
         self._queue = deque(maxlen=1)
         self._lock = threading.Lock()
@@ -424,8 +530,16 @@ class HandTrackingWorker(QThread):
 
     def _ensure_tracker(self, primary_only: bool):
         if self._tracker is None:
-            self._tracker = HandTracker(primary_hand_only=primary_only)
+            _debug_log(f"Creating HandTracker (primary_only={primary_only}, remote={self._use_remote_model})")
+            print(f"[HandTrackingWorker._ensure_tracker] Creating HandTracker (primary_only={primary_only}, remote={self._use_remote_model})")
+            self._tracker = HandTracker(
+                primary_hand_only=primary_only,
+                use_remote_model=self._use_remote_model,
+                remote_endpoint=self._remote_endpoint
+            )
             self._tracker.initialize()
+            _debug_log(f"HandTracker initialized. available={self._tracker.available}")
+            print(f"[HandTrackingWorker._ensure_tracker] HandTracker initialized. available={self._tracker.available}")
             if self._custom_model_file:
                 self._tracker.set_model_path(self._custom_model_file)
             return

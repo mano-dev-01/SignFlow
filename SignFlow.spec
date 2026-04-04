@@ -1,6 +1,15 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all, collect_dynamic_libs
 import os
+import plistlib
+
+# ============================================
+# LOAD CUSTOM INFO.PLIST
+# ============================================
+
+custom_plist_path = 'Code/Mac/crt/Info.plist'
+with open(custom_plist_path, 'rb') as f:
+    custom_plist = plistlib.load(f)
 
 # ============================================
 # DATA & MODELS
@@ -118,4 +127,5 @@ app = BUNDLE(
     name='SignFlow.app',
     icon=None,
     bundle_identifier=None,
+    info_plist=custom_plist,
 )

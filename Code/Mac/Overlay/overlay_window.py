@@ -1053,7 +1053,7 @@ class OverlayWindow(QWidget):
         self.preview_window.show()
 
     def _on_frame_captured(self, frame):
-        process_frame(frame)
+        self._handle_frame(frame)
 
     def _handle_frame(self, frame):
         if not self.capture_state:

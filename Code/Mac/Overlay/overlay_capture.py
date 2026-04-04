@@ -17,36 +17,41 @@ class ScreenCaptureThread(QThread):
         self._running = True
 
     def run(self):
+        from quartz_capture import QuartzScreenCapture
+        
         if not self._region:
             print("[ScreenCaptureThread] ERROR: No region defined")
             return
         
-        # Validate region has required keys
-        required_keys = {"x", "y", "width", "height"}
-        if not all(key in self._region for key in required_keys):
-            print(f"[ScreenCaptureThread] ERROR: Invalid region dict: {self._region}")
-            return
+        capture = QuartzScreenCapture()
+        frame_interval = 1.0 / float(CAPTURE_FPS)
+        next_frame_time = time.perf_counter()
         
-        # macOS-specific screen capture setup
-        if sys.platform == "darwin":
-            # Ensure region coordinates are valid
-            x = int(self._region["x"])
-            y = int(self._region["y"])
-            width = int(self._region["width"])
-            height = int(self._region["height"])
-            
-            # Validate dimensions
-            if width <= 0 or height <= 0:
-                print(f"[ScreenCaptureThread] ERROR: Invalid dimensions: {width}x{height}")
-                return
-            
-            monitor = {
-                "left": x,
-                "top": y,
-                "width": width,
-                "height": height,
-            }
-            print(f"[ScreenCaptureThread] macOS screen capture: x={x}, y={y}, w={width}, h={height}")
+        while self._running:
+            try:
+                rgb_frame = capture.capture_region(
+                    int(self._region["x"]),
+                    int(self._region["y"]),
+                    int(self._region["width"]),
+                    int(self._region["height"]),
+                )
+                if rgb_frame is not None:
+                    h, w = rgb_frame.shape[:2]
+                    self.frame_captured.emit({
+                        "rgb": rgb_frame.tobytes(),
+                        "width": int(w),
+                        "height": int(h),
+                    })
+                
+                next_frame_time += frame_interval
+                sleep_for = next_frame_time - time.perf_counter()
+                if sleep_for > 0:
+                    time.sleep(sleep_for)
+                else:
+                    next_frame_time = time.perf_counter()
+            except Exception as e:
+                print(f"[ScreenCaptureThread] Error: {e}")
+                time.sleep(0.1)
         else:
             monitor = {
                 "left": int(self._region["x"]),
@@ -105,49 +110,38 @@ class WebcamCaptureThread(QThread):
         self._running = True
 
     def run(self):
-        backends = [
-            getattr(cv2, "CAP_DSHOW", 0),
-            getattr(cv2, "CAP_MSMF", 0),
-            getattr(cv2, "CAP_ANY", 0),
-            0,
-        ]
-        tried = set()
-        cap = None
-        for index in [self._device_index, 0, 1, 2]:
-            if index in tried:
-                continue
-            tried.add(index)
-            for backend in backends:
-                cap = cv2.VideoCapture(index, backend)
-                if cap.isOpened():
-                    break
-            if cap is not None and cap.isOpened():
-                break
-        if cap is None or not cap.isOpened():
+        from opencv_webcam import WebcamHandler
+        
+        handler = WebcamHandler(device_index=self._device_index)
+        if not handler.read():
+            print(f"[WebcamCaptureThread] Failed to initialize webcam at index {self._device_index}")
             return
+        
         frame_interval = 1.0 / float(CAPTURE_FPS)
         next_frame_time = time.perf_counter()
+        
         while self._running:
-            ok, frame = cap.read()
+            ok, frame = handler.read()
             if not ok or frame is None:
                 time.sleep(0.01)
                 continue
+            
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             h, w = rgb.shape[:2]
-            self.frame_captured.emit(
-                {
-                    "rgb": rgb.tobytes(),
-                    "width": int(w),
-                    "height": int(h),
-                }
-            )
+            self.frame_captured.emit({
+                "rgb": rgb.tobytes(),
+                "width": int(w),
+                "height": int(h),
+            })
+            
             next_frame_time += frame_interval
             sleep_for = next_frame_time - time.perf_counter()
             if sleep_for > 0:
                 time.sleep(sleep_for)
             else:
                 next_frame_time = time.perf_counter()
-        cap.release()
+        
+        handler.close()
 
     def stop(self):
         self._running = False

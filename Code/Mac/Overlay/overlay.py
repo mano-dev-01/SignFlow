@@ -25,6 +25,7 @@ from overlay_utils import (
     _configure_macos_overlay_window,
 )
 from overlay_window import OverlayWindow
+from model_loader import get_model_loader
 
 warnings.filterwarnings(
     "ignore",
@@ -151,6 +152,11 @@ def main():
     defaults, preferences = ensure_preferences_files()
 
     configure_macos_app()
+
+    # Start loading model in background before UI
+    model_loader = get_model_loader()
+    model_loader.load_async()
+    print("[Main] Model loading in background...")
 
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(True)
