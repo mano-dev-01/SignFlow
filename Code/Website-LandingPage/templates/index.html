@@ -339,17 +339,17 @@
                 {% endif %}
                 {% if session.get('user') %}
                 <div class="login-header" style="text-align: center; padding: 40px;">
-                    <h2>Welcome, {{ session['user'].get('name', 'User') }}!</h2>
+                    <h2 class="account-title">Welcome, <span class="account-name">{{ session['user'].get('display_name', session['user'].get('name', 'User')) }}</span> <span class="account-badge">PRO</span>!</h2>
                     <p>Your session is active.</p>
                     <p style="margin-top: 8px;">Current Plan: <strong>{{ session['user'].get('plan', 'free')|upper }}</strong></p>
                     <p style="margin-top: 4px;">Subscription: {{ session['user'].get('subscription_status', 'inactive') }}</p>
                     <br>
                     <div style="display: grid; gap: 10px; max-width: 320px; margin: 0 auto;">
                         <form action="{{ url_for('subscription_upgrade') }}" method="POST">
-                            <button type="submit" class="btn btn-primary btn-full">Upgrade to Pro (Demo)</button>
+                            <button type="submit" class="btn btn-primary btn-full">Upgrade to Pro</button>
                         </form>
                         <form action="{{ url_for('subscription_cancel') }}" method="POST">
-                            <button type="submit" class="btn btn-secondary btn-full">Cancel Subscription (Demo)</button>
+                            <button type="submit" class="btn btn-secondary btn-full">Cancel Subscription</button>
                         </form>
                         <a href="{{ url_for('logout') }}" class="btn btn-secondary">Sign Out</a>
                     </div>

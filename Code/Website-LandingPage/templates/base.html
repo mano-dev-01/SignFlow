@@ -30,7 +30,10 @@
                 <a href="{{ url_for('live') }}" class="nav-link">Try Online</a>
                 <a href="{{ url_for('index') }}#donate" class="nav-link nav-donate" data-scroll="donate">Donate</a>
                 {% if session.get('user') %}
-                <a href="{{ url_for('logout') }}" class="nav-link">Logout ({{ session['user'].get('name', 'User') }})</a>
+                <a href="{{ url_for('logout') }}" class="nav-link nav-user-link">
+                    <span class="nav-user-name">{{ session['user'].get('display_name', session['user'].get('name', 'User')) }}</span>
+                    <span class="nav-user-badge">PRO</span>
+                </a>
                 {% else %}
                 <a href="{{ url_for('index') }}#login" class="nav-link" data-scroll="login">Login</a>
                 {% endif %}

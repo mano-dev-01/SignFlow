@@ -78,6 +78,12 @@ def current_user():
         return None
     return User.query.get(user_id)
 
+
+def display_name(full_name):
+    if not full_name:
+        return 'User'
+    return full_name.split()[0]
+
 def render_placeholder(title, description, detail, cta_label='Return home', cta_href=None):
     if cta_href is None:
         cta_href = url_for('index')
@@ -382,6 +388,7 @@ def auth_google_callback():
         'id': user.id,
         'email': user.email,
         'name': user.name,
+        'display_name': display_name(user.name),
         'picture': user_info.get('picture'),
         'plan': user.plan,
         'subscription_status': user.subscription_status,
