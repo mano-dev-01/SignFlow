@@ -7,7 +7,18 @@ import plistlib
 # LOAD CUSTOM INFO.PLIST
 # ============================================
 
-custom_plist_path = 'Code/Mac/crt/Info.plist'
+# Get the directory where this spec file is located
+# In PyInstaller context, __file__ may not be defined, so we use the current directory
+# (the build_dmg.sh script changes to the spec_dir before running PyInstaller)
+try:
+    spec_dir = os.path.dirname(os.path.abspath(__file__))
+except NameError:
+    spec_dir = os.getcwd()
+
+# project_root should be the Code/Mac directory (one level up from mac_builder)
+project_root = os.path.dirname(spec_dir)
+
+custom_plist_path = os.path.join(spec_dir, 'crt', 'Info.plist')
 with open(custom_plist_path, 'rb') as f:
     custom_plist = plistlib.load(f)
 
@@ -16,10 +27,10 @@ with open(custom_plist_path, 'rb') as f:
 # ============================================
 
 datas = [
-    ('Code/Mac/Model_inference', 'Model_inference'),
-    ('Code/Mac/Models', 'Models'),
-    ('Code/Mac/Overlay/default_settings.json', '.'),
-    ('Code/Mac/version.py', '.'),  # Version file
+    (os.path.join(project_root, 'Model_inference'), 'Model_inference'),
+    (os.path.join(project_root, 'Models'), 'Models'),
+    (os.path.join(project_root, 'Overlay', 'default_settings.json'), '.'),
+    (os.path.join(project_root, 'version.py'), '.'),  # Version file
 ]
 
 # ============================================
@@ -82,8 +93,8 @@ hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
-    ['Code/Mac/Overlay/overlay.py'],
-    pathex=[],
+    [os.path.join(project_root, 'Overlay', 'overlay.py')],
+    pathex=[os.path.join(project_root, 'Overlay')],
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,

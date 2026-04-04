@@ -215,14 +215,16 @@ if [ "$SKIP_DMG" = false ]; then
     
     if [ -f "./make_product_dmg.sh" ]; then
         chmod +x ./make_product_dmg.sh
-        ./make_product_dmg.sh
+        # Pass the actual app path (from mac_builder/dist) and desired DMG output location
+        APP_INPUT="$DIST_DIR/SignFlow.app"
+        DMG_OUTPUT="$DIST_DIR/SignFlow-mac.dmg"
+        ./make_product_dmg.sh "$APP_INPUT" "$DMG_OUTPUT"
         
-        # Find the created DMG
-        DMG_FILE=$(find "$DIST_DIR" -name "*.dmg" -type f | head -1)
-        if [ -n "$DMG_FILE" ]; then
-            log_success "DMG created: $DMG_FILE"
+        # Check if DMG was created
+        if [ -f "$DMG_OUTPUT" ]; then
+            log_success "DMG created: $DMG_OUTPUT"
         else
-            log_warning "DMG script ran but no DMG found in dist/"
+            log_warning "DMG script ran but no DMG found at expected location"
         fi
     else
         log_warning "make_product_dmg.sh not found, creating simple DMG..."
