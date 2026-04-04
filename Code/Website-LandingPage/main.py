@@ -7,6 +7,7 @@ import os
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
+from sqlalchemy import inspect, text
 
 load_dotenv()
 
@@ -42,15 +43,40 @@ google = oauth.register(
 # User Model
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    google_sub = db.Column(db.String(255), unique=True, nullable=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     name = db.Column(db.String(100))
+    plan = db.Column(db.String(20), nullable=False, default='free')
+    subscription_status = db.Column(db.String(20), nullable=False, default='inactive')
 
     def __repr__(self):
         return f'<User {self.email}>'
 
+
+def ensure_user_columns():
+    """Add new user columns for older databases without migrations."""
+    inspector = inspect(db.engine)
+    columns = {column['name'] for column in inspector.get_columns('user')}
+
+    if 'google_sub' not in columns:
+        db.session.execute(text('ALTER TABLE user ADD COLUMN google_sub VARCHAR(255)'))
+    if 'plan' not in columns:
+        db.session.execute(text("ALTER TABLE user ADD COLUMN plan VARCHAR(20) DEFAULT 'free'"))
+    if 'subscription_status' not in columns:
+        db.session.execute(text("ALTER TABLE user ADD COLUMN subscription_status VARCHAR(20) DEFAULT 'inactive'"))
+    db.session.commit()
+
 # Initialize Database
 with app.app_context():
     db.create_all()
+    ensure_user_columns()
+
+
+def current_user():
+    user_id = session.get('user', {}).get('id')
+    if not user_id:
+        return None
+    return User.query.get(user_id)
 
 def render_placeholder(title, description, detail, cta_label='Return home', cta_href=None):
     if cta_href is None:
@@ -106,7 +132,13 @@ def add_security_headers(response):
 @app.route('/')
 def index():
     """Landing page"""
-    return render_template('index.html')
+    form_status = session.pop('subscription_form_status', None)
+    form_message = session.pop('subscription_form_message', None)
+    return render_template(
+        'index.html',
+        form_status=form_status,
+        form_message=form_message,
+    )
 
 
 @app.route('/live')
@@ -248,6 +280,40 @@ def logout():
     return redirect(url_for('index'))
 
 
+@app.route('/subscription/upgrade', methods=['POST'])
+def subscription_upgrade():
+    user = current_user()
+    if not user:
+        return redirect(url_for('login'))
+
+    user.plan = 'pro'
+    user.subscription_status = 'active'
+    db.session.commit()
+
+    session['user']['plan'] = user.plan
+    session['user']['subscription_status'] = user.subscription_status
+    session['subscription_form_status'] = 'success'
+    session['subscription_form_message'] = 'Your account is now on the Pro plan (demo mode).'
+    return redirect(f"{url_for('index')}#login")
+
+
+@app.route('/subscription/cancel', methods=['POST'])
+def subscription_cancel():
+    user = current_user()
+    if not user:
+        return redirect(url_for('login'))
+
+    user.plan = 'free'
+    user.subscription_status = 'inactive'
+    db.session.commit()
+
+    session['user']['plan'] = user.plan
+    session['user']['subscription_status'] = user.subscription_status
+    session['subscription_form_status'] = 'info'
+    session['subscription_form_message'] = 'Pro plan canceled (demo mode). You are back on Free.'
+    return redirect(f"{url_for('index')}#login")
+
+
 @app.route('/auth/google/callback')
 def auth_google_callback():
     """Finish Google login and create the session."""
@@ -277,11 +343,48 @@ def auth_google_callback():
             form_message='Google did not return a user profile.'
         ), 400
 
+    email = user_info.get('email')
+    if not email:
+        return render_template(
+            'login.html',
+            form_status='error',
+            form_message='Google account did not provide an email address.'
+        ), 400
+
+    google_sub = user_info.get('sub')
+    user = None
+    if google_sub:
+        user = User.query.filter_by(google_sub=google_sub).first()
+    if not user:
+        user = User.query.filter_by(email=email).first()
+
+    if not user:
+        user = User(
+            google_sub=google_sub,
+            email=email,
+            name=user_info.get('name'),
+            plan='free',
+            subscription_status='inactive',
+        )
+        db.session.add(user)
+    else:
+        if google_sub and not user.google_sub:
+            user.google_sub = google_sub
+        user.name = user_info.get('name') or user.name
+        if not user.plan:
+            user.plan = 'free'
+        if not user.subscription_status:
+            user.subscription_status = 'inactive'
+
+    db.session.commit()
+
     session['user'] = {
-        'id': user_info.get('sub'),
-        'email': user_info.get('email'),
-        'name': user_info.get('name'),
+        'id': user.id,
+        'email': user.email,
+        'name': user.name,
         'picture': user_info.get('picture'),
+        'plan': user.plan,
+        'subscription_status': user.subscription_status,
     }
     return redirect(url_for('index'))
 

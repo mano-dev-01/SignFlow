@@ -332,12 +332,27 @@
             </div>
 
             <div class="login-panel-right">
+                {% if form_status %}
+                <div class="form-status form-status-{{ form_status }}" role="status" aria-live="polite">
+                    {{ form_message }}
+                </div>
+                {% endif %}
                 {% if session.get('user') %}
                 <div class="login-header" style="text-align: center; padding: 40px;">
                     <h2>Welcome, {{ session['user'].get('name', 'User') }}!</h2>
                     <p>Your session is active.</p>
+                    <p style="margin-top: 8px;">Current Plan: <strong>{{ session['user'].get('plan', 'free')|upper }}</strong></p>
+                    <p style="margin-top: 4px;">Subscription: {{ session['user'].get('subscription_status', 'inactive') }}</p>
                     <br>
-                    <a href="{{ url_for('logout') }}" class="btn btn-secondary">Sign Out</a>
+                    <div style="display: grid; gap: 10px; max-width: 320px; margin: 0 auto;">
+                        <form action="{{ url_for('subscription_upgrade') }}" method="POST">
+                            <button type="submit" class="btn btn-primary btn-full">Upgrade to Pro (Demo)</button>
+                        </form>
+                        <form action="{{ url_for('subscription_cancel') }}" method="POST">
+                            <button type="submit" class="btn btn-secondary btn-full">Cancel Subscription (Demo)</button>
+                        </form>
+                        <a href="{{ url_for('logout') }}" class="btn btn-secondary">Sign Out</a>
+                    </div>
                 </div>
                 {% else %}
                 <form class="login-form" action="{{ url_for('login') }}" method="POST">
