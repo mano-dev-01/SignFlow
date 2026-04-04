@@ -1,33 +1,79 @@
-# macOS-Specific Requirements
+# macOS-Specific Requirements for SignFlow
 # Run: pip install -r requirements_macos.txt
 
-# Core dependencies (from main requirements.txt)
+# ============================================
+# CORE DEPENDENCIES
+# ============================================
+
+# UI Framework
 PyQt5==5.15.11
+
+# Computer Vision & AI
 mediapipe==0.10.14
+opencv-python==4.9.0.80
+torch>=2.0.0
+
+# Machine Learning utilities
 joblib==1.4.2
 scikit-learn==1.4.2
 numpy==1.26.4
-opencv-python==4.9.0.80
+
+# Screen capture (tool, kept for fallback)
 mss==9.0.1
-SpeechRecognition
-PyAudio
-torch>=2.0.0
+
+# Web server
 flask>=3.0.0
 flask-cors>=4.0.0
 
-# macOS-specific additions
-# Audio support
-# NOTE: `pyaudio-portaudio` is not reliably available on macOS via PyPI.
-# Install PortAudio with Homebrew, then install PyAudio in the venv:
-#   brew install portaudio
-#   pip install PyAudio
+# ============================================
+# AUDIO INPUT (NEW)
+# ============================================
 
-# For better macOS native integration (optional but recommended)
+# Modern audio library (replaces PyAudio for better PyInstaller bundling)
+sounddevice>=0.4.6
+
+# Optional: for audio file I/O in tests
+# soundfile>=0.12.1
+
+# ============================================
+# SCREEN CAPTURE (MACOS-NATIVE)
+# ============================================
+
+# macOS Quartz framework for reliable screen capture
+pyobjc-framework-Quartz>=9.0
 pyobjc-framework-Cocoa>=9.0
-# py-applescript  # For future macOS automation support
 
-# Development/Testing (optional)
+# ============================================
+# UPDATE SYSTEM (NEW)
+# ============================================
+
+# HTTP requests for version checking
+requests>=2.31.0
+
+# Version comparison utilities
+packaging>=23.0
+
+# ============================================
+# OPTIONAL: DEVELOPMENT & TESTING
+# ============================================
+
 pytest>=7.0.0
 pytest-cov>=4.0.0
 black>=23.0.0
 flake8>=6.0.0
+
+# ============================================
+# NOTES
+# ============================================
+
+# Audio Setup on macOS:
+#   sounddevice uses PortAudio under the hood.
+#   Usually no extra brew install needed; it comes with macOS.
+#   If issues, try: brew install portaudio
+#
+# Quartz Setup:
+#   pyobjc-framework-Quartz should install automatically.
+#   Requires Xcode command line tools: xcode-select --install
+#
+# PyInstaller will automatically collect these with appropriate
+# hiddenimports and binaries configurations.

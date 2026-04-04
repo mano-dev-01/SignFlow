@@ -38,10 +38,39 @@ def configure_runtime():
         os.environ.setdefault("QT_QPA_PLATFORM", "cocoa")
 
     # Ensure module import paths for this repo layout:
-    root = Path(__file__).resolve().parents[2]
+    # In bundled apps, try multiple approaches
+    root_found = False
+    
+    # Method 1: Try __file__ path (dev mode)
+    try:
+        root = Path(__file__).resolve().parents[2]
+        if (root / 'Model_inference').exists():
+            root_found = True
+            print(f"[OVERLAY_REMOTE] Found root via __file__: {root}")
+    except Exception:
+        pass
+    
+    # Method 2: Try Resources folder (bundled app)
+    if not root_found and hasattr(sys, 'frozen'):
+        try:
+            app_root = Path(sys.executable).parents[2]  # .app/Contents/MacOS/SignFlow
+            root = app_root
+            if (root / 'Model_inference').exists():
+                root_found = True
+                print(f"[OVERLAY_REMOTE] Found root via sys.executable (bundled): {root}")
+        except Exception:
+            pass
+    
+    # Method 3: Try current working directory or environment variable
+    if not root_found:
+        root = Path(os.environ.get('SIGNFLOW_ROOT', '.'))
+        if not (root / 'Model_inference').exists():
+            root = Path.home()  # Fallback to home directory
+        print(f"[OVERLAY_REMOTE] Using fallback root: {root}")
+    
     model_dir = root / 'Model_inference'
     for path in [str(root), str(model_dir)]:
-        if path not in sys.path:
+        if path not in sys.path and Path(path).exists():
             sys.path.insert(0, path)
             print(f"[OVERLAY_REMOTE] added to sys.path: {path}")
 

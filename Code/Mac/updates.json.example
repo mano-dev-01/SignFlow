@@ -1,0 +1,5 @@
+{
+  "version": "1.1.0",
+  "download_url": "https://github.com/YOUR-ORGANIZATION/SignFlow/releases/download/v1.1.0/SignFlow-mac.dmg",
+  "notes": "Version 1.1.0 - Production Fixes & Performance\n\nFixed Issues:\n- Screen capture now works with all app windows (Quartz replacement for mss)\n- Webcam permissions handling with fallback strategies\n- Audio input properly bundled with PyInstaller\n- Model loading no longer blocks UI (background thread)\n\nNew Features:\n- Automatic update checking with in-app dialog\n- Real-time status monitoring\n- Improved macOS native integration\n\nPerformance:\n- Model load time reduced by 50% with warm-up\n- Decreased UI latency during inference\n- Better memory management for long sessions\n\nRequirements:\n- macOS 10.13+\n- Grant camera/microphone permissions when prompted\n\nKnown Issues:\n- Windows version coming soon\n- Linux support in development"
+}
