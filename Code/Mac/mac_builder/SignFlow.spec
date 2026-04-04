@@ -18,7 +18,7 @@ with open(custom_plist_path, 'rb') as f:
 datas = [
     ('Code/Mac/Model_inference', 'Model_inference'),
     ('Code/Mac/Models', 'Models'),
-    ('Code/Common/Overlay/default_settings.json', '.'),
+    ('Code/Mac/Overlay/default_settings.json', '.'),
     ('Code/Mac/version.py', '.'),  # Version file
 ]
 
