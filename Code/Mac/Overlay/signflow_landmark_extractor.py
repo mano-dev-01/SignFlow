@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 import traceback
 
-ROOT_DIR = Path(__file__).resolve().parents[2]
+ROOT_DIR = Path(__file__).resolve().parents[1]  # Code/Mac
 MODEL_DIR = ROOT_DIR / "Model_inference"
 for path in [str(ROOT_DIR), str(MODEL_DIR)]:
     if path not in sys.path:

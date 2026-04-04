@@ -1,9 +1,8 @@
-from __future__ import annotations
-
-import ctypes
 import os
 import random
 import sys
+import ctypes
+import ctypes.util
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage
@@ -40,15 +39,8 @@ def generate_fake_status(system_state: str):
     left_conf = random.random() if hands >= 1 else 0.0
     right_conf = random.random() if hands == 2 else 0.0
     fps = random.randint(20, 30)
-    model_state = random.choice(
-        ["Idle", "Detecting Hands", "Processing Frame", "Waiting for Input"]
-    )
-    capture_state = (
-        "Active"
-        if system_state == "Running"
-        else ("Paused" if system_state == "Paused" else "Idle")
-    )
-
+    model_state = random.choice(["Idle", "Detecting Hands", "Processing Frame", "Waiting for Input"])
+    capture_state = "Active" if system_state == "Running" else ("Paused" if system_state == "Paused" else "Idle")
     return {
         "System": system_state,
         "Capture Region": capture_state,
@@ -63,25 +55,22 @@ def generate_fake_status(system_state: str):
 def _frame_to_qimage(frame):
     if not isinstance(frame, dict):
         return None
-
     rgb = frame.get("rgb")
     width = int(frame.get("width", 0) or 0)
     height = int(frame.get("height", 0) or 0)
-
     if rgb is None or width <= 0 or height <= 0:
         return None
-
     bytes_per_line = width * 3
     image = QImage(rgb, width, height, bytes_per_line, QImage.Format_RGB888)
     return image.copy()
 
 
-# ---------------- WINDOWS ----------------
 def _set_window_excluded_from_capture(widget):
     if sys.platform != "win32":
         return
-
     try:
+        import ctypes
+
         hwnd = int(widget.winId())
         affinity = 0x11 if EXCLUDE_OVERLAY_FROM_CAPTURE else 0x00
         ctypes.windll.user32.SetWindowDisplayAffinity(hwnd, affinity)
@@ -89,65 +78,63 @@ def _set_window_excluded_from_capture(widget):
         pass
 
 
-def _guess_overlay_role(widget) -> str:
-    name = type(widget).__name__.lower()
-    if "preview" in name:
-        return "preview"
-    if "selection" in name or "highlight" in name:
-        return "selection"
-    return "overlay"
-
-
-def _get_macos_controller():
-    if sys.platform != "darwin":
-        return None
-    try:
-        from macos_overlay_controller import get_macos_overlay_controller
-
-        return get_macos_overlay_controller()
-    except Exception as exc:
-        print(f"[overlay_utils] macOS controller unavailable: {exc}")
-        return None
-
-
-# ---------------- MACOS ----------------
-def configure_macos_app():
-    controller = _get_macos_controller()
-    if controller is not None:
-        controller.configure_app_policy()
-
-
-def configure_macos_overlay(widget):
-    controller = _get_macos_controller()
-    if controller is not None:
-        controller.register_window(widget, role=_guess_overlay_role(widget))
-
-
-def configure_macos_overlay_v2(widget):
-    configure_macos_overlay(widget)
-
-
-def configure_macos_overlay_refresh(widget):
-    controller = _get_macos_controller()
-    if controller is not None:
-        controller.refresh_window(widget)
-
-
 def _configure_macos_overlay_window(widget):
-    controller = _get_macos_controller()
-    if controller is None:
+    """Configure Qt window as a non-activating NSPanel visible on all Spaces."""
+    if sys.platform != "darwin":
         return
-    controller.register_window(widget, role=_guess_overlay_role(widget))
-    controller.refresh_window(widget)
 
+    try:
+        import objc
+        from AppKit import (
+            NSFloatingWindowLevel,
+            NSWindowCollectionBehaviorCanJoinAllSpaces,
+            NSWindowCollectionBehaviorFullScreenAuxiliary,
+            NSWindowStyleMaskNonactivatingPanel,
+        )
 
-def configure_macos_overlay_final(widget):
-    _configure_macos_overlay_window(widget)
+        ns_view_ptr = int(widget.winId())
+        if not ns_view_ptr:
+            return
 
+        ns_view = objc.objc_object(c_void_p=ns_view_ptr)
+        ns_window = ns_view.window()
+        if ns_window is None:
+            return
 
-def configure_macos_overlay_ultra(widget):
-    _configure_macos_overlay_window(widget)
+        panel_class = objc.lookUpClass("NSPanel")
+        if not ns_window.isKindOfClass_(panel_class):
+            libobjc_path = ctypes.util.find_library("objc")
+            if libobjc_path:
+                libobjc = ctypes.cdll.LoadLibrary(libobjc_path)
+                object_set_class = libobjc.object_setClass
+                object_set_class.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+                object_set_class.restype = ctypes.c_void_p
+                object_set_class(
+                    ctypes.c_void_p(objc.pyobjc_id(ns_window)),
+                    ctypes.c_void_p(objc.pyobjc_id(panel_class)),
+                )
+                ns_window = objc.objc_object(c_void_p=objc.pyobjc_id(ns_window))
 
+        style = int(ns_window.styleMask()) | int(NSWindowStyleMaskNonactivatingPanel)
+        ns_window.setStyleMask_(style)
+        ns_window.setFloatingPanel_(True)
+        ns_window.setBecomesKeyOnlyIfNeeded_(False)
+        ns_window.setWorksWhenModal_(True)
 
-def configure_macos_overlay_with_notifications(widget):
-    _configure_macos_overlay_window(widget)
+        behavior = int(ns_window.collectionBehavior())
+        behavior |= int(NSWindowCollectionBehaviorCanJoinAllSpaces)
+        behavior |= int(NSWindowCollectionBehaviorFullScreenAuxiliary)
+        ns_window.setCollectionBehavior_(behavior)
+
+        ns_window.setLevel_(int(NSFloatingWindowLevel))
+        ns_window.setHidesOnDeactivate_(False)
+        if hasattr(ns_window, "setCanBecomeKeyWindow_"):
+            ns_window.setCanBecomeKeyWindow_(False)
+        if hasattr(ns_window, "setCanBecomeMainWindow_"):
+            ns_window.setCanBecomeMainWindow_(False)
+
+        ignores_mouse = bool(widget.testAttribute(Qt.WA_TransparentForMouseEvents))
+        ns_window.setIgnoresMouseEvents_(ignores_mouse)
+        ns_window.orderFrontRegardless()
+    except Exception:
+        pass

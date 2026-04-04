@@ -10,8 +10,8 @@ import sys
 import traceback
 
 # Ensure the project root is on module path.
-# `server.py` lives in Code/Common/Overlay; model package lives in Code/Model_inference.
-ROOT_DIR = Path(__file__).resolve().parents[2]
+# `server.py` lives in Code/Mac/Overlay; model package lives in Code/Mac/Model_inference.
+ROOT_DIR = Path(__file__).resolve().parents[1]  # Code/Mac
 MODEL_DIR = ROOT_DIR / "Model_inference"
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))

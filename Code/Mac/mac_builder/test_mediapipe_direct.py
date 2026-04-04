@@ -6,8 +6,8 @@ import numpy as np
 from pathlib import Path
 
 # Add paths like the app does
-ROOT_DIR = Path(__file__).resolve().parent
-MODEL_DIR = ROOT_DIR / "Code/Mac/Model_inference"
+ROOT_DIR = Path(__file__).resolve().parent.parent  # mac_builder -> Mac
+MODEL_DIR = ROOT_DIR / "Model_inference"
 for path in [str(ROOT_DIR), str(MODEL_DIR)]:
     if path not in sys.path:
         sys.path.insert(0, path)

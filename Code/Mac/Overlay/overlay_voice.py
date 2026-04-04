@@ -31,8 +31,8 @@ class VoiceToTextWorker(QThread):
     def run(self):
         speech_recognition = _safe_import("speech_recognition")
         if speech_recognition is None:
-            print("[Voice] SpeechRecognition import failed (optional feature).")
-            self.error.emit("Voice-to-text disabled: Install speech_recognition for optional support.")
+            print("[Voice] SpeechRecognition import failed.")
+            self.error.emit("SpeechRecognition is missing. Install SpeechRecognition + PyAudio.")
             return
         print("[Voice] SpeechRecognition imported.")
 
