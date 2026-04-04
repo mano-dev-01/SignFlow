@@ -6,6 +6,7 @@ Flask application entry point
 import os
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
+from authlib.integrations.flask_client import OAuth
 
 load_dotenv()
 
@@ -20,11 +21,23 @@ app.config['LIVE_PREDICTION_SERVER_URL'] = os.environ.get(
     'LIVE_PREDICTION_SERVER_URL',
     'https://mano-dev-01-signflow-inference.hf.space',
 )
+app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID')
+app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET')
+app.config['GOOGLE_REDIRECT_URI'] = os.environ.get('GOOGLE_REDIRECT_URI')
 app.config['WINDOWS_DOWNLOAD_URL'] = os.environ.get(
     'SIGNFLOW_WINDOWS_DOWNLOAD_URL',
     'https://github.com/mano-dev-01/SignFlow/releases/download/v1.0.0/SignFlowSetup.exe',
 )
 db = SQLAlchemy(app)
+oauth = OAuth(app)
+
+google = oauth.register(
+    name='google',
+    client_id=app.config['GOOGLE_CLIENT_ID'],
+    client_secret=app.config['GOOGLE_CLIENT_SECRET'],
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'},
+)
 
 # User Model
 class User(db.Model):
@@ -166,10 +179,24 @@ def login():
         return render_template(
             'login.html',
             form_status='info',
-            form_message='Sign-in is currently disabled. Please check back soon.'
+            form_message='Use Google Sign-In to access your account.'
         )
 
     return render_template('login.html')
+
+
+@app.route('/auth/google')
+def auth_google():
+    """Start Google login."""
+    if not app.config.get('GOOGLE_CLIENT_ID') or not app.config.get('GOOGLE_CLIENT_SECRET'):
+        return render_template(
+            'login.html',
+            form_status='error',
+            form_message='Google Sign-In is not configured yet. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.'
+        )
+
+    redirect_uri = app.config.get('GOOGLE_REDIRECT_URI') or url_for('auth_google_callback', _external=True)
+    return google.authorize_redirect(redirect_uri)
 
 
 @app.route('/download/windows')
@@ -218,6 +245,44 @@ def donate(amount):
 @app.route('/logout')
 def logout():
     session.pop('user', None)
+    return redirect(url_for('index'))
+
+
+@app.route('/auth/google/callback')
+def auth_google_callback():
+    """Finish Google login and create the session."""
+    try:
+        token = google.authorize_access_token()
+        user_info = token.get('userinfo')
+
+        if not user_info:
+            user_info_response = google.get('https://openidconnect.googleapis.com/v1/userinfo')
+            if user_info_response.ok:
+                user_info = user_info_response.json()
+
+        if not user_info and token.get('id_token'):
+            user_info = google.parse_id_token(token)
+    except Exception as exc:
+        app.logger.exception('Google OAuth callback failed: %s', exc)
+        return render_template(
+            'login.html',
+            form_status='error',
+            form_message='Google Sign-In failed. Please try again.'
+        ), 400
+
+    if not user_info:
+        return render_template(
+            'login.html',
+            form_status='error',
+            form_message='Google did not return a user profile.'
+        ), 400
+
+    session['user'] = {
+        'id': user_info.get('sub'),
+        'email': user_info.get('email'),
+        'name': user_info.get('name'),
+        'picture': user_info.get('picture'),
+    }
     return redirect(url_for('index'))
 
 
