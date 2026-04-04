@@ -32,7 +32,7 @@
                 {% if session.get('user') %}
                 <a href="{{ url_for('logout') }}" class="nav-link nav-user-link">
                     <span class="nav-user-name">{{ session['user'].get('display_name', session['user'].get('name', 'User')) }}</span>
-                    <span class="nav-user-badge">PRO</span>
+                    <span class="nav-user-badge" aria-label="Pro plan">PRO</span>
                 </a>
                 {% else %}
                 <a href="{{ url_for('index') }}#login" class="nav-link" data-scroll="login">Login</a>

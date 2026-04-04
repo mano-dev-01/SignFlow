@@ -294,6 +294,58 @@ body {
     color: var(--text-primary);
 }
 
+.nav-user-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    white-space: nowrap;
+}
+
+.nav-user-name {
+    max-width: 10rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-user-badge,
+.account-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.28rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #fff;
+    background: linear-gradient(135deg, #22c55e 0%, #06b6d4 40%, #8b5cf6 100%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.28), 0 0 0 1px rgba(14, 165, 233, 0.1) inset;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.18);
+}
+
+.account-title {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+.account-name {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
+}
+
+.nav-user-name {
+    font-weight: 700;
+}
+
 :root[data-theme="dark"] .nav-link:hover {
     color: transparent;
     background-image: var(--text-gradient);

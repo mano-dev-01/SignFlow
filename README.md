@@ -119,6 +119,8 @@ Contains the caption UI, capture logic, runtime configuration, and packaged Wind
 
 Contains the Flask app that powers the landing page, authentication, demo pages, and platform-specific download routes.
 
+The current web auth flow uses Google OAuth to create or look up a local SignFlow user record. The logged-in session keeps a small user snapshot, while the app database stores the persistent account row and the cosmetic plan state.
+
 ---
 
 ## Tech Stack
@@ -205,6 +207,9 @@ This approach keeps the runtime portable for end users while preserving a normal
 - The Flask site handles download routing for platform-specific installers.
 - The Windows installer can be hosted as a GitHub Release asset.
 - The overlay can be configured to talk to a remote inference server through runtime configuration or environment variables.
+- Google OAuth credentials are read from environment variables.
+- The web app currently supports a cosmetic Free/Pro subscription toggle for signed-in Google users.
+- The subscription buttons are demo-only and update local app state, not a payment processor.
 
 ---
 
