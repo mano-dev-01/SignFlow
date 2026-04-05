@@ -2,6 +2,8 @@
 Robust audio input handler using sounddevice (better for PyInstaller bundling than PyAudio).
 """
 
+from __future__ import annotations
+
 import sys
 from typing import Optional, Callable
 

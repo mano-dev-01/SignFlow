@@ -43,7 +43,7 @@ def configure_runtime():
     
     # Method 1: Try __file__ path (dev mode)
     try:
-        root = Path(__file__).resolve().parents[2]
+        root = Path(__file__).resolve().parents[1]  # signflow_overlay -> Overlay -> Mac
         if (root / 'Model_inference').exists():
             root_found = True
             print(f"[OVERLAY_REMOTE] Found root via __file__: {root}")

@@ -82,7 +82,7 @@ class UpdateChecker:
                 print(f"[UpdateChecker] Error in callback: {e}")
 
     @staticmethod
-    def _parse_version_string(ver_str: str) -> Optional:
+    def _parse_version_string(ver_str: str):
         """
         Parse version string. Returns packaging.version.Version or None.
         """

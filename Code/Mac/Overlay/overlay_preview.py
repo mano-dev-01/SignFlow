@@ -1,5 +1,3 @@
-import sys
-
 from PyQt5.QtCore import QPoint, Qt, QTimer
 from PyQt5.QtGui import QGuiApplication, QImage, QPixmap
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
@@ -15,20 +13,14 @@ from overlay_constants import (
     STATUS_PANEL_TITLE_SIZE,
     get_theme_palette,
 )
-from overlay_utils import _configure_macos_overlay_window, _set_window_excluded_from_capture
+from overlay_utils import _set_window_excluded_from_capture
 
 
 class PreviewWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowFlags(
-            Qt.FramelessWindowHint
-            | Qt.WindowStaysOnTopHint
-            | Qt.Tool
-            | Qt.WindowDoesNotAcceptFocus
-        )
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setAttribute(Qt.WA_TranslucentBackground, False)
-        self.setAttribute(Qt.WA_ShowWithoutActivating, True)
 
         self._status_visible = False
         self._capture_state = "IDLE"
@@ -272,9 +264,6 @@ class PreviewWindow(QWidget):
         super().showEvent(event)
         self._position_near_corner()
         _set_window_excluded_from_capture(self)
-        if sys.platform == "darwin":
-            _configure_macos_overlay_window(self)
-            QTimer.singleShot(150, lambda: _configure_macos_overlay_window(self))
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

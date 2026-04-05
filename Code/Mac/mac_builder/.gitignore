@@ -1,0 +1,7 @@
+build/
+dist/
+.pyinstaller/
+.dmg_staging/
+*.spec.bak
+.DS_Store
+__pycache__/

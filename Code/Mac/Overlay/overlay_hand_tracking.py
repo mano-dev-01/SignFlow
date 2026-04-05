@@ -13,7 +13,7 @@ from PyQt5.QtCore import QThread, pyqtSignal
 
 from overlay_constants import SIGN_PREDICTION_MIN_CONFIDENCE
 
-ROOT_DIR = Path(__file__).resolve().parents[2]
+ROOT_DIR = Path(__file__).resolve().parents[1]  # Code/Mac
 MODEL_DIR = ROOT_DIR / "Model_inference"
 for path in [str(ROOT_DIR), str(MODEL_DIR)]:
     if path not in sys.path:

@@ -1,30 +1,9 @@
 import os
-import sys
-from pathlib import Path
 
 DEFAULT_DEPLOYED_SERVER_URL = "https://mano-dev-01-signflow-inference.hf.space"
-
-
-def _read_installed_server_url() -> str | None:
-    if not getattr(sys, "frozen", False):
-        return None
-
-    candidate = Path(sys.executable).resolve().parent / "server_url.txt"
-    if not candidate.exists():
-        return None
-
-    try:
-        value = candidate.read_text(encoding="utf-8").strip()
-    except OSError:
-        return None
-
-    return value or None
-
-
-DEFAULT_SERVER_URL = (
-    os.environ.get("SIGNFLOW_SERVER_URL")
-    or _read_installed_server_url()
-    or DEFAULT_DEPLOYED_SERVER_URL
+DEFAULT_SERVER_URL = os.environ.get(
+    "SIGNFLOW_SERVER_URL",
+    DEFAULT_DEPLOYED_SERVER_URL,
 )
 DEFAULT_PREDICT_INTERVAL = 0.15
 SERVER_HEALTH_TIMEOUT_SECONDS = 5

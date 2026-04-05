@@ -1,5 +1,4 @@
 import time
-import sys
 
 from PyQt5.QtCore import (
     QAbstractAnimation,
@@ -97,7 +96,6 @@ from overlay_preferences import _read_json, _sanitize_settings, save_user_prefer
 from overlay_preview import PreviewWindow
 from overlay_selection import HighlightOverlay, RegionSelectionOverlay
 from overlay_utils import (
-    _configure_macos_overlay_window,
     _frame_to_qimage,
     _set_window_excluded_from_capture,
     process_frame,
@@ -111,17 +109,6 @@ from overlay_voice import VoiceToTextWorker
 class OverlayWindow(QWidget):
     def __init__(self, defaults, preferences, debug_captions: bool = False, enable_logging: bool = False):
         super().__init__()
-
-        if sys.platform == "darwin":
-            self.setWindowFlags(
-                Qt.Window
-                | Qt.FramelessWindowHint
-                | Qt.WindowStaysOnTopHint
-                | Qt.NoDropShadowWindowHint
-                | Qt.WindowDoesNotAcceptFocus
-            )
-            self.setAttribute(Qt.WA_ShowWithoutActivating, True)
-            self.setFocusPolicy(Qt.NoFocus)
 
         self.defaults = defaults
         self.preferences = preferences
@@ -200,8 +187,7 @@ class OverlayWindow(QWidget):
 
         set_frame_dispatcher(self._handle_frame)
 
-        if sys.platform != "darwin":
-            self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
         QTimer.singleShot(0, lambda: _set_window_excluded_from_capture(self))
 
@@ -251,7 +237,6 @@ class OverlayWindow(QWidget):
     def showEvent(self, event):
         super().showEvent(event)
         _set_window_excluded_from_capture(self)
-        _configure_macos_overlay_window(self)
 
     def _write_preferences(self):
         self.preferences["caption_box_size"] = self.pending_caption_box_size
