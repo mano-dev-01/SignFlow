@@ -31,7 +31,7 @@ app.config['WINDOWS_DOWNLOAD_URL'] = os.environ.get(
 )
 app.config['MACOS_DOWNLOAD_URL'] = os.environ.get(
     'SIGNFLOW_MACOS_DOWNLOAD_URL',
-    'https://github.com/mano-dev-01/SignFlow/releases/tag/v.1.0.1',
+    'https://github.com/mano-dev-01/SignFlow/releases/download/v.1.0.1/SignFlow.dmg',
 )
 db = SQLAlchemy(app)
 oauth = OAuth(app)

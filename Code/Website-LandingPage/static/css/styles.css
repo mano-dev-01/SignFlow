@@ -366,6 +366,50 @@ body {
     line-height: 1.35;
 }
 
+.nav-user-actions {
+    margin-top: 0.25rem;
+}
+
+.nav-user-action-form {
+    margin: 0;
+}
+
+.nav-user-action-btn {
+    width: 100%;
+    padding: 0.48rem 0.72rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    transition: border-color var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.nav-user-action-btn:hover {
+    border-color: var(--accent);
+}
+
+.nav-user-action-primary {
+    background-color: var(--text-primary);
+    color: var(--bg-primary);
+    border-color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .nav-user-action-primary {
+    background-image: var(--accent-gradient);
+    color: #05070f;
+    border-color: transparent;
+}
+
+:root[data-theme="dark"] .nav-user-action-secondary,
+:root[data-theme="dark"] .nav-user-action-btn,
+:root[data-theme="dark"] .nav-user-logout {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
 .nav-user-logout {
     margin-top: 0.35rem;
     display: inline-flex;
@@ -390,8 +434,11 @@ body {
 }
 
 .nav-user-badge-free {
-    background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
-    box-shadow: 0 8px 20px rgba(75, 85, 99, 0.22);
+    color: #1f2937;
+    background: linear-gradient(135deg, #f3f4f6 0%, #d1d5db 100%);
+    border-color: rgba(17, 24, 39, 0.12);
+    box-shadow: 0 6px 14px rgba(107, 114, 128, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.28) inset;
+    text-shadow: none;
 }
 
 .nav-user-name {

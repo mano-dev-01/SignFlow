@@ -43,6 +43,17 @@
                         <p class="nav-user-card-name">{{ session['user'].get('name', 'User') }}</p>
                         <p class="nav-user-card-meta">Account: {{ session['user'].get('plan', 'free')|upper }}</p>
                         <p class="nav-user-card-meta">Status: {{ session['user'].get('subscription_status', 'inactive')|capitalize }}</p>
+                        <div class="nav-user-actions">
+                            {% if session['user'].get('plan') == 'pro' %}
+                            <form action="{{ url_for('subscription_cancel') }}" method="POST" class="nav-user-action-form">
+                                <button type="submit" class="nav-user-action-btn nav-user-action-secondary" role="menuitem">Cancel Pro</button>
+                            </form>
+                            {% else %}
+                            <form action="{{ url_for('subscription_upgrade') }}" method="POST" class="nav-user-action-form">
+                                <button type="submit" class="nav-user-action-btn nav-user-action-primary" role="menuitem">Upgrade to Pro</button>
+                            </form>
+                            {% endif %}
+                        </div>
                         <a href="{{ url_for('logout') }}" class="nav-user-logout" role="menuitem">Logout</a>
                     </div>
                 </div>
