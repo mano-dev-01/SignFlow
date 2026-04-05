@@ -300,7 +300,7 @@ def subscription_upgrade():
     session['user']['subscription_status'] = user.subscription_status
     session['subscription_form_status'] = 'success'
     session['subscription_form_message'] = 'Your account is now on the Pro plan (demo mode).'
-    return redirect(f"{url_for('index')}#login")
+    return redirect(url_for('index'))
 
 
 @app.route('/subscription/cancel', methods=['POST'])
@@ -317,7 +317,7 @@ def subscription_cancel():
     session['user']['subscription_status'] = user.subscription_status
     session['subscription_form_status'] = 'info'
     session['subscription_form_message'] = 'Pro plan canceled (demo mode). You are back on Free.'
-    return redirect(f"{url_for('index')}#login")
+    return redirect(url_for('index'))
 
 
 @app.route('/auth/google/callback')
