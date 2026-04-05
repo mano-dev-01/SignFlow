@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV_DIR="$SCRIPT_DIR/venv-build"
+OVERLAY_DIR="$SCRIPT_DIR/Overlay"
+MODEL_DIR="$SCRIPT_DIR/Model_inference"
+MODELS_DIR="$SCRIPT_DIR/Models"
 SERVER_URL="${SIGNFLOW_SERVER_URL:-https://mano-dev-01-signflow-inference.hf.space}"
 
 echo "========================================"

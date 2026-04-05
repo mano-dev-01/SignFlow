@@ -7,7 +7,7 @@ Desktop.ini
 *.swp
 *.swo
 *~
-.venv-build/
+
 # Python bytecode and caches
 __pycache__/
 *.py[cod]
@@ -20,7 +20,7 @@ __pycache__/
 .pyre/
 .ruff_cache/
 .tox/
-
+.venv-build
 # Virtual environments and local env files
 .env
 .env.*
@@ -36,7 +36,7 @@ Code/.venv/
 Code/ENV/
 Code/env/
 Code/venv/
-
+Code/Mac/.venv-build
 # Build, packaging, and coverage
 .coverage
 .coverage.*
