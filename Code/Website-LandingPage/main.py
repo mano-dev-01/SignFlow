@@ -29,6 +29,10 @@ app.config['WINDOWS_DOWNLOAD_URL'] = os.environ.get(
     'SIGNFLOW_WINDOWS_DOWNLOAD_URL',
     'https://github.com/mano-dev-01/SignFlow/releases/download/v1.0.0/SignFlowSetup.exe',
 )
+app.config['MACOS_DOWNLOAD_URL'] = os.environ.get(
+    'SIGNFLOW_MACOS_DOWNLOAD_URL',
+    'https://github.com/mano-dev-01/SignFlow/releases/tag/v.1.0.1',
+)
 db = SQLAlchemy(app)
 oauth = OAuth(app)
 
@@ -251,13 +255,7 @@ def download_linux():
 
 @app.route('/download/macos')
 def download_macos():
-    return render_placeholder(
-        'macOS Release',
-        'SignFlow for macOS is on the way.',
-        'We will add a waitlist and release notifications here as soon as builds are ready.',
-        cta_label='Back to Downloads',
-        cta_href=url_for('download')
-    )
+    return redirect(app.config['MACOS_DOWNLOAD_URL'])
 
 
 @app.route('/download/android')

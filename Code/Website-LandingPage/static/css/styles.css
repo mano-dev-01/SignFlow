@@ -301,6 +301,99 @@ body {
     white-space: nowrap;
 }
 
+.nav-user-menu {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.nav-user-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    white-space: nowrap;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.nav-user-card {
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    right: 0;
+    min-width: 220px;
+    padding: 0.9rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-primary);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.14);
+    display: grid;
+    gap: 0.45rem;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(6px);
+    pointer-events: none;
+    transition: opacity var(--transition-fast), transform var(--transition-fast), visibility var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
+    z-index: 1200;
+}
+
+.nav-user-menu:hover .nav-user-card,
+.nav-user-menu:focus-within .nav-user-card {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+:root[data-theme="dark"] .nav-user-card {
+    background-color: var(--bg-secondary);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 14px 40px rgba(3, 8, 30, 0.65);
+}
+
+.nav-user-card-name {
+    margin: 0;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+.nav-user-card-meta {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.35;
+}
+
+.nav-user-logout {
+    margin-top: 0.35rem;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+}
+
+.nav-user-logout:hover {
+    border-color: var(--accent);
+}
+
+:root[data-theme="dark"] .nav-user-logout {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.nav-user-badge-free {
+    background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+    box-shadow: 0 8px 20px rgba(75, 85, 99, 0.22);
+}
+
 .nav-user-name {
     max-width: 10rem;
     overflow: hidden;
@@ -2399,6 +2492,35 @@ code {
 
     .navbar-menu .nav-link {
         width: 100%;
+    }
+
+    .nav-user-menu {
+        width: 100%;
+        display: block;
+    }
+
+    .nav-user-trigger {
+        width: 100%;
+        justify-content: space-between;
+        text-align: left;
+    }
+
+    .nav-user-card {
+        position: static;
+        margin-top: var(--spacing-sm);
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        pointer-events: auto;
+        display: none;
+    }
+
+    .nav-user-menu:focus-within .nav-user-card {
+        display: grid;
+    }
+
+    .nav-user-menu:hover .nav-user-card {
+        display: grid;
     }
 
     .nav-underline {

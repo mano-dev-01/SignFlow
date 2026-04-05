@@ -30,12 +30,22 @@
                 <a href="{{ url_for('live') }}" class="nav-link">Try Online</a>
                 <a href="{{ url_for('index') }}#donate" class="nav-link nav-donate" data-scroll="donate">Donate</a>
                 {% if session.get('user') %}
-                <a href="{{ url_for('logout') }}" class="nav-link nav-user-link">
-                    <span class="nav-user-name">{{ session['user'].get('display_name', session['user'].get('name', 'User')) }}</span>
-                    {% if session['user'].get('plan') == 'pro' %}
-                    <span class="nav-user-badge" aria-label="Pro plan">PRO</span>
-                    {% endif %}
-                </a>
+                <div class="nav-user-menu">
+                    <button class="nav-link nav-user-trigger" type="button" aria-haspopup="true">
+                        <span class="nav-user-name">{{ session['user'].get('display_name', session['user'].get('name', 'User')) }}</span>
+                        {% if session['user'].get('plan') == 'pro' %}
+                        <span class="nav-user-badge" aria-label="Pro plan">PRO</span>
+                        {% else %}
+                        <span class="nav-user-badge nav-user-badge-free" aria-label="Free plan">FREE</span>
+                        {% endif %}
+                    </button>
+                    <div class="nav-user-card" role="menu" aria-label="Profile menu">
+                        <p class="nav-user-card-name">{{ session['user'].get('name', 'User') }}</p>
+                        <p class="nav-user-card-meta">Account: {{ session['user'].get('plan', 'free')|upper }}</p>
+                        <p class="nav-user-card-meta">Status: {{ session['user'].get('subscription_status', 'inactive')|capitalize }}</p>
+                        <a href="{{ url_for('logout') }}" class="nav-user-logout" role="menuitem">Logout</a>
+                    </div>
+                </div>
                 {% else %}
                 <a href="{{ url_for('index') }}#login" class="nav-link" data-scroll="login">Login</a>
                 {% endif %}
