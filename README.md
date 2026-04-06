@@ -1,5 +1,3 @@
-![Team SignFlow](Docs/teamphoto.png)
-
 # SignFlow
 
 SignFlow is a sign-language-to-text system built around real-time landmark extraction, sequence modeling, remote inference, and caption delivery through an overlay and web interface.
